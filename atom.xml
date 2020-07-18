@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://kaby-lake.github.io/</id>
     <title>Gridea</title>
-    <updated>2020-07-18T05:59:24.552Z</updated>
+    <updated>2020-07-18T06:07:04.519Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://kaby-lake.github.io/"/>
     <link rel="self" href="https://kaby-lake.github.io/atom.xml"/>
@@ -11,35 +11,271 @@
     <icon>https://kaby-lake.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, Gridea</rights>
     <entry>
-        <title type="html"><![CDATA[Hello Gridea]]></title>
-        <id>https://kaby-lake.github.io/post/hello-gridea/</id>
-        <link href="https://kaby-lake.github.io/post/hello-gridea/">
+        <title type="html"><![CDATA[Database & Interface Review]]></title>
+        <id>https://kaby-lake.github.io/post/database-and-interface-review/</id>
+        <link href="https://kaby-lake.github.io/post/database-and-interface-review/">
         </link>
-        <updated>2018-12-11T16:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-<!-- more -->
-<p><a href="https://github.com/getgridea/gridea">Github</a><br>
-<a href="https://gridea.dev/">Gridea 主页</a><br>
-<a href="http://fehey.com/">示例网站</a></p>
-<h2 id="特性">特性👇</h2>
-<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
-<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
-<p>🏷️  你可以对文章进行标签分组</p>
-<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
-<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
-<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
-<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
-<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
-<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
-<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
-<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
-<p>未来，它一定会成为你离不开的伙伴</p>
-<p>尽情发挥你的才华吧！</p>
-<p>😘 Enjoy~</p>
+        <updated>2020-07-18T06:06:46.000Z</updated>
+        <content type="html"><![CDATA[<p>这学期的Syllabus如下</p>
+<ul>
+<li>
+<ul>
+<li>HTML</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>CSS</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>JavaScript</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>PHP</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>Relational Algebra</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>Data Modeling</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>SQL</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>Normalization</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>一点点的Closure和Armstrong's Axiom</li>
+</ul>
+</li>
+</ul>
+<p>相信我，看起来很多，但学的都是非常非常基础的内容…</p>
+<p>前后端这部分是Prapa一个人教，讲的知识点我认为是基础里面的很细致了。而且Prapa真的是很负责任，不仅提前录好了很长很清楚的网课视频，而且在正常上课和Lab的时间段都在ZOOM上等我们…虽然我没去几节。</p>
+<p>不过Prapa的改分标准可真是令人…而且基本上没有任何Argue的余地（她会认真的回复你的Argue然后坚持她的改分意见…）贴一张第一个Coursework的评分标准…</p>
+<figure data-type="image" tabindex="1"><img src="https://ae01.alicdn.com/kf/H8256776ab9344651a81201ef51bd19e5G.jpg" alt=" " loading="lazy"></figure>
+<p>更新：我把一些关于HTML CSS JS和PHP的意见和建议（主要是关于教的内容过于少）总结了一下发给了Prapa，得到的回复如下…</p>
+<figure data-type="image" tabindex="2"><img src="https://ae01.alicdn.com/kf/H1d56f69b7e6f421586c26098b74baa0fo.jpg" alt=" " loading="lazy"></figure>
+<p>关于Coursework部分的回复：</p>
+<figure data-type="image" tabindex="3"><img src="https://ae01.alicdn.com/kf/H9f63f10c28cc4688ae8cfce990feb70d7.jpg" alt=" " loading="lazy"></figure>
+<p><strong>7.2日，Coursework 2 出分了，挺那个的，真的挺那个的，没啥意思就，散了散了，晚安。</strong></p>
+<p>注意上面所强调的&quot;<strong>基础</strong>&quot;二字，这也是我对宁诺几乎所有课程的不满之处。</p>
+<ul>
+<li>
+<ul>
+<li>是，确实教了CSS，可是并没有教网页的Layout，比如说Flex布局</li>
+</ul>
+</li>
+<li>
+<p>是，确实教了JavaScript，可是并没有怎么教JS相比以前学的更底层语言的特性，比如this，high-order-function，异步函数，Promises，回调地狱（？）等</p>
+</li>
+<li>
+<p>等等</p>
+</li>
+</ul>
+<p>对于课后练习来说，我个人觉得Lab Sheet并没有准备什么好玩的练习题，于是在网上找到了这个</p>
+<blockquote>
+<p>University of Washington. CS154 Web Programming</p>
+</blockquote>
+<p>这门课的Problem Sets还挺好玩的，会教你用纯JS来实现各种操作DOM元素，让你感受到纯JS不用框架来实现动态网页是多么的麻烦和脑残…</p>
+<p>我比较想讲一讲一个占25分的Coursework，今年老师们紧跟时事，让我们写一个口罩销售管理系统，有一点类似于淘宝，但没有支付环节。</p>
+<p>给各位康一康我写的，我觉得害挺好看的</p>
+<figure data-type="image" tabindex="4"><img src="https://ae01.alicdn.com/kf/H236b78d8b53b432eb93837e5cb975347f.jpg" alt=" " loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="https://ae01.alicdn.com/kf/He830e7d33acc44f9a8caf0b66bed29b3H.jpg" alt=" " loading="lazy"></figure>
+<figure data-type="image" tabindex="6"><img src="https://ae01.alicdn.com/kf/Hf6aeb18aebc0488eae113622ae055736M.jpg" alt=" " loading="lazy"></figure>
+<figure data-type="image" tabindex="7"><img src="https://ae01.alicdn.com/kf/H299094a8d4f94f04a416ceb5f6e12f00w.jpg" alt=" " loading="lazy"></figure>
+<figure data-type="image" tabindex="8"><img src="https://ae01.alicdn.com/kf/H685be17b5ba44c77ac415dae5b59aa79M.jpg" alt=" " loading="lazy"></figure>
+<p>刚开始看到这个cw的时候我和朋友们各种祖安出题老师（正好当时知乎上清华的雷课堂挺火的…），总觉得这玩意儿写不出来，毕竟根据上课讲的那些基础的东西，能写出这种稍微能上线能用的网站简直是她妈的离谱…我算是开始项目开始的相对较早的，cw是4月底发的，要求五月底交，在我们组结束了SE的cw以后差不多五月中旬我就开始写了。之前我是对于前后端一点知识储备都没有，仅仅是过了一遍PPT就开始各种自学。</p>
+<p>如果各位真的想要认真做一个稍微还能看的过去的网站，并且学一些前后端知识的话，我还是挺推荐提前学一下现代（？）网页开发技术栈（其实都火了好几年了）比如说Bootstrap（好吧这个已经不属于''现代&quot;范畴了）或者各种基于MVVM (Model-View-ViewModel)的声明式框架比如说Vue.js，React.js这类的，我其实挺后悔当初没有狠下心来选择Vue，因为只有MVC，各种响应和变化都需要手动来操作DOM元素，到项目后期元素和控件复杂起来的时候真的会炸心态的…</p>
+<p>Github真的是个好东西，各种你不想自己造的轮子这上面都有，只要import再在report里标注一下用了开源项目就行，比如说我就找到了蚂蚁金融做的交互式图表组件，sha256算法，ISO国家和地区生成器等等，<strong>面向Github开发大法好</strong>。</p>
+<p>这学期没有讲Ajax，但想要用JS来POST或者GET得会用，想要在前后端传数据还得学会用JSON，想要PHP来方法重载还得学会用命名空间……想要做出一个能用的网站其实不难，想要做出一个好用则…</p>
+<p>Anyway，等我有时间再更新一下Database部分哈</p>
+<p>88</p>
+<p>或者鸽了</p>
+<figure data-type="image" tabindex="9"><img src="https://ae01.alicdn.com/kf/H422deae02ff14b49a5f5e53906880a5eg.jpg" alt=" " loading="lazy"></figure>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[System & Architecture Review]]></title>
+        <id>https://kaby-lake.github.io/post/system-and-architecture-review/</id>
+        <link href="https://kaby-lake.github.io/post/system-and-architecture-review/">
+        </link>
+        <updated>2020-07-18T06:05:25.000Z</updated>
+        <content type="html"><![CDATA[<p>2020.7更新：<br>
+最近紧赶慢赶差不多大概重温了CS:APP的PPT，总结一下：<br>
+前六个课件就是我们SYS部分的全部内容啦<sup>_</sup>，只不过CMU教的是X86-64-RISC，我们选择的是MIPS-CISC，原理基本上差不多，Network部分CMU用了两个PPT，但比我们讲的要详细的多，因此在期末复习的话看懂上述这八个PPT，课后的习题看一看，Lab稍微做一做，基本上就能90+🌶</p>
+<p>说一说几个比较有趣的Lab：</p>
+<ul>
+<li>Data Lab：仅用! ˜ &amp; ˆ | + &lt;&lt; &gt;&gt;来实现如下函数：bitXor(x,y), tmin(), isTmax(x), allOddBits(x), negate(x), isAsciDigit(x), conditional, isLessOrEqual(x, y), logicalNeg(x)), howManyBits(x), floatScale2(uf), floatFloat2Int(uf), floatPower2(x)。前几个函数还是挺简单和有趣的，后面几个就比较难实现了，需要对bit level有比较深的理解。我觉得光这个Lab就能直接代替nand2tetris这门课…</li>
+<li>Bomb Lab：学会使用gdb和objdump来进行打断点，查看内存地址和内容，以及反汇编，根据反汇编出来的代码来猜这个程序要输入的是啥字符串。难度梯度增加，到第五个的时候要看懂大概1 200行的各种jump和call，有点脑壳痛。这个Lab会让你对汇编有一个更加深刻的理解</li>
+<li>Attack Lab：根据堆栈和Buffer Overflow的原理来实现字符串注入攻击，简单点来说就是注入的字符串在栈上溢出，覆盖了本不应被更改的return address，而这个返回地址会返回到注入的特定字符串来执行恶意代码。实现这个Lab以后基本就精通了堆栈以及函数调用的原理</li>
+</ul>
+<p>这仅仅是前三个Lab，后面的更难，他妈的。</p>
+<ul>
+<li>Proxy Lab：用C提供的网路API写一个HTTP Proxy伺服器，我写不来，幹。</li>
+</ul>
+<p>上述Lab是和UNNC这门课内容相关的，有兴趣可以做一下，我知道大概是没有兴趣的。<br>
+UNNC这门课是一个计算机系统的集大成者，OS、Compiler等的先行课，出发点是极好的，理应是比较有难度的几门课之一。但最终的课程安排，教学质量和不合理的学期长度使得…没能学到啥有用的东西。</p>
+<p>给几个链接：<br>
+http://www.cs.cmu.edu/afs/cs/academic/class/15213-f19/www/<br>
+http://csapp.cs.cmu.edu/3e/labs.html<br>
+https://www.bilibili.com/video/BV1iW411d7hd?from=search&amp;seid=1555167750088544141</p>
+<p>晚安</p>
+<p>19-20 Semester<br>
+其实我对宁诺这门课的设计不是很满意。<br>
+今年System部分是Ying Weng和Heng Yu在上，用的书是Computer Organization and Design： The Hardware/Software Interface，Network则是Amin，用的是Distributed System: Concepts and Design</p>
+<p>这门课的Syllabus如下：</p>
+<ul>
+<li><strong>Hierarchy and Components</strong></li>
+<li><strong>Computer Performance</strong></li>
+<li><strong>MIPS Programing: Basic, Signedness, Addressing, Procedure</strong></li>
+<li><strong>Floating Point</strong></li>
+<li><strong>Basic Networking</strong></li>
+<li><strong>Socket Programming with TCP/IP</strong></li>
+</ul>
+<p>其实算下来真没讲多少东西，这在国内大学要分两门课：<strong>计算机系统组成及原理</strong>、<strong>计算机网络</strong>，这俩每门课都是至少20教学周的东西，你指望宁诺10周就能给你讲完…而且Ying Weng讲课还催眠…一个与或门她能给你讲半个小时…这方面Heng Yu讲课就整挺好，不过稍微有那么一点点快…</p>
+<p>MIPS这玩意儿现在貌似也就“龙芯”还在用这个架构，所以实际上这部分学习没有真正和实际打通，更多是学一个概念比如如何堆栈，如何把2个32位的寄存器拼起来当64位浮点型用之类的，不算难。所以我寻思着这部分如果改成学x86-64然后学会用gdb反汇编会不会更好一点…</p>
+<p>网络这部分一定要学好，尤其是TCP/IP协议栈还有报文之类的，如果有兴趣的还可以找时间自己把国内的计算机网络这门课研究透，以后不论做前端还是后端开发都会用得着…吧</p>
+<p>题外话，Computer System还有一门比较经典的神课CMU的15-213: Intro to Computer Systems 用的是Bryant的CSAPP (Computer System: A Programmer's Perspective)这本书（他本人也在CMU教这门课）感兴趣的可以去找一找视频和资料来整一整，内容基本上就是SYS这门课的延伸，会涉及：各种uint int float的bit表示、x86-64汇编以及反汇编、optimization、cache、linking、exeception control flow、i/o、虚拟内存、malloc的实现、socket、synchronization之类的。Lab十分非常贼他妈有挑战性，反正我是没做完…<br>
+其实这个评测并不是所谓意义上的Database &amp; Interface的评测，我大概重点会放在Interface这边，然后稍微讲一下Database（因为我也是考试前两天才开始学的数据库的范式…）。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[聊一聊 iOS 和 iPadOS 的 iBoot]]></title>
+        <id>https://kaby-lake.github.io/post/liao-yi-liao-ios-he-ipados-de-iboot/</id>
+        <link href="https://kaby-lake.github.io/post/liao-yi-liao-ios-he-ipados-de-iboot/">
+        </link>
+        <updated>2020-07-18T06:04:53.000Z</updated>
+        <content type="html"><![CDATA[<p>前几天手贱用ipsw升级iOS系统，在用Finder升级的过程中不知道为啥挂掉了，然后便一直处于（白苹果）DFU模式，后来没办法，用_爱思助手_之类的软件重新刷了一遍，幸亏保住了数据，这之后便萌生出想搞清楚iOS的iBoot以及相关的技术细节的想法。</p>
+<h2 id="什么是dfu-mode">什么是DFU Mode</h2>
+<p>DFU全称<strong>Device Firmware Upgrade Mode</strong>，即设备固件升级模式。在这个模式下iOS设备将不加载iBoot（即控制设备启动，刷机时控制刷入流程与固件版本验证的底层程序），仅加载LLB（<strong>Low Level Bootloader</strong>，底层启动引导）来保证数据传输正常，刷机过程完全由Mac控制。iOS设备的DFU Mode与LLB一起是写死在Boot Rom（开机时首先启动的ROM，包含DFU Mode所需驱动，LLB以及开机时那的苹果Logo）上的。就算是iOS设备无法启动，无法进入恢复模式，也可进入DFU模式来刷入全新固件。</p>
+<h3 id="checkm8"><strong>checkm8</strong></h3>
+<p>接下来就是大名鼎鼎的checkm8漏洞了。（checkm(ate)：将死）为了保证 iOS 系统的代码不被恶意篡改，苹果公司使用了一套名为 <strong>安全启动链（Secure Boot Chain）</strong> 的技术。他们将开机过程分为四到五个阶段，每个阶段负责检查下个阶段的代码，如果检查出任何问题，比如签名错误、安全模式不符，就立马中止开机。iPhone 的开机过程分为以下四个阶段：</p>
+<ol>
+<li><strong>ROM / Secure ROM</strong>：开机启动时执行的第一段程序，负责检查并加载接下来的 iBoot 。</li>
+<li><strong>iBoot</strong>：苹果开发的引导程序，负责检查并加载系统内核。</li>
+<li><strong>Kernel</strong>：iOS 系统内核。</li>
+<li><strong>OS</strong>：iOS 系统的用户界面、后台服务等非核心组件。</li>
+</ol>
+<p>Secure ROM <strong>作为系统启动时执行的第一段程序</strong>，<strong>扮演着整个安全启动链技术的信任基石。</strong> 一旦攻破了它，接下来所有阶段的代码都能随意篡改，因此苹果公司下了很大功夫来保护这段 ROM 程序：</p>
+<ul>
+<li><strong>封杀写权限</strong> ：这段程序烧写在 CPU 的硅片内部，无法拆解，无法替换。在工厂里一次性烧录完之后，就连苹果自己都没办法改动它。</li>
+<li><strong>封杀读权限</strong> ：这段程序完成工作后，会直接把自己所在的储存器锁掉，再没有任何办法能读取它。也就是说，启动之后哪怕你攻陷了整个系统，也读不到这段程序的内容。苹果的想法很单纯——如果一段程序黑客读都读不到，改也改不了，那么这段程序应该就会很安全。</li>
+</ul>
+<h3 id="抓取-secure-rom"><strong>抓取 Secure ROM</strong></h3>
+<p>刚刚我们提到， Secure ROM 完成工作后，才会把储存器锁住。换句话说，只要 Secure ROM 还没完成工作，我们就有机会从内存里读到它的内容。<br>
+如何抓住这个机会呢？这就轮到 checkm8 出场了。checkm8 是一个任意代码执行漏洞，允许我们在 ROM 运行期间植入 payload。更贴心的是， ani0mX 还在自己发布的 exploit 里附上了一段高质量的 payload 。允许我们通过 USB 给 payload 发送指令，执行各种高权限的操作，比如：<br>
+./ipwndfu --dump-rom：将 iPhone 的 Secure ROM 直接从内存里抓取出来，保存为文件。<br>
+./ipwndfu --demote：启用 JTAG 模式。</p>
+<p>配合一条5800多元的 Bonobo 线，你就可以用 gdb 随意调试 iPhone 内核了。另外， axi0mX 的 payload 里还有一个 execute 命令非常好用，但是没有放出命令行接口，只能自己写 Python 代码来调用。这个命令允许你调用内存里存在的任意函数，能传递参数，还能拿到返回值。<br>
+好了，言归正传，在 checkm8 的帮助下，窃取苹果公司层层保护的代码仅需三步：</p>
+<ol>
+<li>使用网上搜到的按键组合，把 iPhone 手机重启到 DFU 模式（固件升级模式）</li>
+<li>执行./ipwndfu -p命令植入 payload，如果显示漏洞利用失败的话就多试几次</li>
+<li>执行./ipwndfu --dump-rom命令读取 ROM 并保存到当前文件夹下，完工。</li>
+</ol>
+<p>成功拿到 ROM 的二进制机器码之后，接下来扔给反编译器就可以了。苹果的 CPU 从 A7 开始都是 AArch64 架构， little-endian 字序， ROM 的起始地址都是0x100000000，设定好这三项之后，反编译器就能直出正确的汇编代码了。<br>
+除了反编译得到的这些代码外，网上还有一些开源的 iBoot 项目，以及苹果某实习生泄露出来的一份四五年前的旧版 Secure ROM 代码，这些材料对我们的逆向分析都非常有帮助。但是，由于发布这些泄露代码铁定会吃一张苹果的律师函，所以我不会在这篇文章里引用或发布那份泄露代码，有需要的读者还请自己动手搜索一下。<br>
+最后要说的是，刚才那套轻松的招数最多只能用到 iPhone X 上，从 Xs / Xr 开始 checkm8 漏洞就没法用了。对于这些手机，目前我们也没有什么好办法，只能用黑盒测试、旧 ROM 代码和 iBoot 代码这三样凑活着挖漏洞。<br>
+iBoot 的代码能用来挖 ROM 的漏洞，是因为 iBoot 和 ROM 有一部分功能重叠，所以代码也有重叠。比如这次的 checkm8 漏洞，就是 ani0mX 在分析一个 iBoot 补丁的时候发现的。<br>
+至于解密 iBoot 的具体方法，因为好像有点偏题了，所以将来有机会的话再开篇文章讲讲吧。有兴趣的读者可以先自行了解一下 iOS 的 GID Key、IMG3/IMG4、KBAG 这几个概念。</p>
+<h3 id="漏洞原理解析"><strong>漏洞原理解析</strong></h3>
+<p>前文中提到过，利用 checkm8 前需要先把手机重启到 DFU 模式，因为这次的漏洞正是出在这个 DFU 模式上。<br>
+苹果的 DFU 模式大致相当于一个“应急启动模式”，重启到这个模式后，用户可以用 USB 传入一个临时系统，用临时系统开机启动。（当然，这个临时系统必须是苹果官方系统。）<br>
+基于 littlelailo 的草稿、 iPhone 8 的逆向结果，以及一些“开源”的 iBoot 项目，我整理出了 DFU 应急启动的八个步骤：<br>
+1.手机以 DFU 模式开机后，负责处理 USB 的主模块会先调用usb_dfu_init()函数，初始化 DFU 子模块。初始化过程主要做两件事：分配一块 2048 字节的内存作为缓冲区，我们叫它io_buffer。把 DFU 事件处理函数提交给 USB 驱动 ，等待用户发来的 DFU 请求。<br>
+2.当用户想要加载临时系统时，会先发送一个DFU_DNLOAD请求。主模块将它转发给 DFU 事件处理函数。<br>
+3.DFU 检查这个请求，如果用户想要发来一段长度为wLength的数据，那么 DFU 将会检查wLength是否超过 2048 字节。超过的话，发送一个 STALL 包掐断 USB 会话，向主模块返回-1。不超过的话，用指针将 io_buffer传递给一个全局变量 ，向主模块返回wLength。<br>
+4.主模块把wLength等信息记录到另一个全局变量中，为接下来接收数据做好准备。<br>
+5.用户接下来将数据陆续发送给主模块，主模块将这些数据复制到io_buffer中。等到所有的数据都接收完毕后，主模块通知 DFU 模块处理这些数据。<br>
+6.DFU 模块拿到io_buffer，确认里面数据的长度确实是用户刚开始允诺的wLength，然后将这些数据复制到临时系统的加载地址，比如0x18001C000（iPhone 8/X）。<br>
+7.缓冲区数据处理完毕之后，主模块 清空之前的所有全局变量 ，准备接受下一个 USB 请求。<br>
+8.当用户分批发送完临时系统的所有内容后，会发送一个DFU_DONE请求。主模块将它转发给 DFU ，通知 DFU 开机，于是 DFU 模块 释放掉io_buffer ，尝试开机。如果开机失败，再次执行usb_dfu_init()，开始第二轮 DFU 启动。</p>
+<p>有人也许已经能看出来这次漏洞的原理了。第3步 DFU 将io_buffer地址记录到了一个全局变量里，如果用户接着发送一个DFU_DONE请求的话，5~7步就会被直接跳过。第8步 DFU 释放掉io_buffer这块内存，开机失败跳回到第1步，开始第二轮 DFU 启动。<strong>这时之前那个全局变量记录的，还是已经释放掉的io_buffer，这就构成了一个 Use-After-Free 漏洞。</strong><br>
+在这个 UAF 漏洞的基础上，只要找到一个合适的攻击目标，用堆风水引导 malloc 把攻击目标分配到io_buffer上，就能通过写io_buffer修改这个攻击目标的内容了。<br>
+为了构建 ROP 调用链， ani0mX 盯上了一个名叫usb_device_io_request的数据结构。这个数据结构里面保存着发给 USB 驱动的 IO 请求，正常情况下，USB 驱动会挨个处理这些请求，完成数据收发。但是如果用户要求重置 USB 会话的话，驱动就会 一口气清空所有请求 ，并且 调用每个请求的回调函数 。通过逆向 iPhone 8 的 Secure ROM ，我整理出了这个请求的具体数据结构：<br>
+这个结构里面，我们主要看两个成员：</p>
+<ul>
+<li>next指针，用来指向下一个要处理的请求对象，构成一串请求链表。</li>
+<li>callback回调函数，虽然图里我把它标成一个void *，但它实际的类型是一个函数指针，void (*callback) (struct usb_device_io_request *io_request)。</li>
+</ul>
+<p>整个攻击思路是这样的：</p>
+<ol>
+<li>构建一串假的 IO 请求，让它们的callback依次指向我们想执行的 gadget 。</li>
+<li>布置一套堆风水布局，操纵 malloc 把一个真请求放到我们掌控的io_buffer上。</li>
+<li>向io_buffer写数据，把那串假请求写进内存，接到真请求的后面。</li>
+<li>发送 USB reset 请求，重置会话，让 USB 驱动执行 ROP 链。</li>
+</ol>
+<p>有了这套思路之后，剩下的就是选 gadget 之类的细节了，我们暂不赘述。至此，checkm8 的攻击原理已经算是基本揭露完了。<br>
+原文指路 https://paper.seebug.org/1065/</p>
+<p>我就想起了之前在15-213 Intro to Computer System里x86-64 Assembly的那一节的Attack Lab，实则就是教你如何Reverse Engineering来找buffer vulnerability。神奇的是，原理和这次的checkm8差不多，都是把比如callq，ret等堆到buffer里面，或者是故意buffer overflow来覆盖掉原来的return address。”堆风水“这个词真的好形象哈哈哈哈哈哈哈哈</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[CMU CS 培养方案]]></title>
+        <id>https://kaby-lake.github.io/post/cmu-cs-pei-yang-fang-an/</id>
+        <link href="https://kaby-lake.github.io/post/cmu-cs-pei-yang-fang-an/">
+        </link>
+        <updated>2020-07-18T06:02:54.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="a-cmu-的课程计算机核心课程如下">A:   CMU 的课程计算机核心课程如下</h1>
+<p>15-122   命令式语言编程 Principles of Imperative Computation（2.5学分，没有编程基础的同学）</p>
+<blockquote>
+<p>大多数专业生的第一门课，讲C顺带解决一大堆基本算法实现大多数简单数据结构，然后会接触很多低层细节，因为1.这玩意是C 2. 最后作业是写一个跑bytecode的VM出来<br>
+15-150   函数式语言编程 Principles of Functional Programming（2.5学分）<br>
+函数型编程，我校著名的丧心病狂的SML系列课之一。基本就是把函数编程范式，理论加应用全来了一遍。其中顺带解决了RegExp，Alpha-Beta Pruning， red-black tree等等。<br>
+15-210   并行/串行数据结构 Parallel and Sequential Data Structures and Algorithms（3学分）<br>
+15-213   计算机系统基础 Introduction to Computer Systems（3学分)<br>
+15-251   计算机理论基础 Great Theoretical Ideas in Computer Science（3学分）<br>
+这课内容甚难，力求以一周一话题的速度迅速撸过理论计算机大多数探究话题，从DFA到图灵机到Decidability到P vs NP再到RSA，Markov Chain，基本无所不包。<br>
+15-451   算法分析与设计 Algorithm Design and Analysis（3学分）</p>
+</blockquote>
+<h1 id="b-一门技术交流课程-one-communcations-course">B:   一门技术交流课程 One Communcations course</h1>
+<p>15-221   计算机科学家技术交流 Technical Communication for Computer Scientists（2学分，相当于我们的英文写作课程，也关注口头表达）</p>
+<h1 id="c-从下面选择一门算法课程">C: 从下面选择一门算法课程</h1>
+<p>15-354   计算离散数学 Computational Discrete Mathematics（3学分）<br>
+15-355   现代计算机代数 Modern Computer Algebra（2学分）<br>
+15-453   形式化语言与自动机 Formal Languages, Automata, and Computability（2学分）<br>
+21-301   组合数学 Combinatorics（2学分）<br>
+21-484   图理论 Graph Theory（2学分）</p>
+<h1 id="d-从下面选择一门应用类课程">D： 从下面选择一门应用类课程</h1>
+<p>05-391   人机交互 Designing Human Centered Software（3学分）<br>
+05-431   用户界面 Software Structures for User Interfaces（1.5学分）<br>
+10-601   机器学习 Machine Learning（3学分）<br>
+11-411   自然语言处理 Natural Language Processing（3学分）<br>
+15-313   软件工程 Foundations of Software Engineering（3学分）<br>
+15-322   计算机音乐 Introduction to Computer Music（2学分）<br>
+15-323   计算机音乐和信息处理 Computer Music Systems and Information Processing（2学分）<br>
+15-381   人工智能 Artificial Intelligence: Representation and Problem Solving（2学分）<br>
+15-384   机器操作 Robotic Manipulation（3学分）<br>
+15-385   计算机视觉 Computer Vision（2学分）<br>
+15-415   数据库应用 Database Applications（3学分）<br>
+15-462   计算机图像 Computer Graphics（3学分）</p>
+<h1 id="e从下面选择一门理论类课程">E：从下面选择一门理论类课程</h1>
+<p>15-312   计算机语言基础 Foundations of Programming Languages（3学分）<br>
+15-317   构造逻辑 Constructive Logic（2学分）<br>
+15-414   计算机自动化验证 Bug Catching: Automated Program Verification and Testing（2学分）<br>
+21-300   基本逻辑 Basic Logic（2学分）<br>
+80-311   复杂性 Computability and Incompleteness（2学分）</p>
+<h1 id="f从下面选择一门软件系统类课程">F：从下面选择一门软件系统类课程</h1>
+<p>15-410   操作系统 Operating System Design and Implementation（３学分）<br>
+15-411   编译器 Compiler Design（３学分）<br>
+15-418   并行体系结构与编程 Parallel Computer Architecture and Programming（３学分）<br>
+15-440   分布式系统 Distributed Systems（３学分）<br>
+15-441   计算机网络 Computer Networks（３学分）</p>
 ]]></content>
     </entry>
 </feed>
