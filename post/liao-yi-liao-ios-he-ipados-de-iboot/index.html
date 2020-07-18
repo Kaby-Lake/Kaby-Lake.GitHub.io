@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>聊一聊 iOS 和 iPadOS 的 iBoot | Gridea</title>
-<link rel="shortcut icon" href="https://kaby-lake.github.io//favicon.ico?v=1595052420135">
+<link rel="shortcut icon" href="https://kaby-lake.github.io//favicon.ico?v=1595052598038">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://kaby-lake.github.io//styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="聊一聊 iOS 和 iPadOS 的 iBoot | Gridea - Atom Feed" href="https://kaby-lake.github.io//atom.xml">
@@ -21,7 +21,7 @@
       <div class="main-content">
         <div class="site-header">
   <a href="https://kaby-lake.github.io/">
-  <img class="avatar" src="https://kaby-lake.github.io//images/avatar.png?v=1595052420135" alt="">
+  <img class="avatar" src="https://kaby-lake.github.io//images/avatar.png?v=1595052598038" alt="">
   </a>
   <h1 class="site-title">
     Gridea
@@ -89,6 +89,7 @@
             <div class="post-content-wrapper">
               <div class="post-content">
                 <p>前几天手贱用ipsw升级iOS系统，在用Finder升级的过程中不知道为啥挂掉了，然后便一直处于（白苹果）DFU模式，后来没办法，用_爱思助手_之类的软件重新刷了一遍，幸亏保住了数据，这之后便萌生出想搞清楚iOS的iBoot以及相关的技术细节的想法。</p>
+<!-- more -->
 <h2 id="什么是dfu-mode">什么是DFU Mode</h2>
 <p>DFU全称<strong>Device Firmware Upgrade Mode</strong>，即设备固件升级模式。在这个模式下iOS设备将不加载iBoot（即控制设备启动，刷机时控制刷入流程与固件版本验证的底层程序），仅加载LLB（<strong>Low Level Bootloader</strong>，底层启动引导）来保证数据传输正常，刷机过程完全由Mac控制。iOS设备的DFU Mode与LLB一起是写死在Boot Rom（开机时首先启动的ROM，包含DFU Mode所需驱动，LLB以及开机时那的苹果Logo）上的。就算是iOS设备无法启动，无法进入恢复模式，也可进入DFU模式来刷入全新固件。</p>
 <h3 id="checkm8"><strong>checkm8</strong></h3>
