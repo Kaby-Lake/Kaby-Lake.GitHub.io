@@ -1,0 +1,215 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>聊一聊 iOS 和 iPadOS 的 iBoot | Gridea</title>
+<link rel="shortcut icon" href="https://kaby-lake.github.io//favicon.ico?v=1629027737869">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://kaby-lake.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="聊一聊 iOS 和 iPadOS 的 iBoot | Gridea - Atom Feed" href="https://kaby-lake.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="前几天手贱用 ipsw 升级 iOS 系统，在用 Finder 升级的过程中不知道为啥挂掉了，然后便一直处于（白苹果）DFU 模式，后来没办法，用_爱思助手_之类的软件重新刷了一遍，幸亏保住了数据，这之后便萌生出想搞清楚 iOS 的 iBo..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://kaby-lake.github.io/">
+  <img class="avatar" src="https://kaby-lake.github.io//images/avatar.png?v=1629027737869" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              聊一聊 iOS 和 iPadOS 的 iBoot
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-06-03
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>前几天手贱用 ipsw 升级 iOS 系统，在用 Finder 升级的过程中不知道为啥挂掉了，然后便一直处于（白苹果）DFU 模式，后来没办法，用_爱思助手_之类的软件重新刷了一遍，幸亏保住了数据，这之后便萌生出想搞清楚 iOS 的 iBoot 以及相关的技术细节的想法。</p>
+<!-- more -->
+<h2 id="什么是-dfu-mode">什么是 DFU Mode</h2>
+<p>DFU 全称<strong>Device Firmware Upgrade Mode</strong>，即设备固件升级模式。在这个模式下 iOS 设备将不加载 iBoot（即控制设备启动，刷机时控制刷入流程与固件版本验证的底层程序），仅加载 LLB（<strong>Low Level Bootloader</strong>，底层启动引导）来保证数据传输正常，刷机过程完全由 Mac 控制。iOS 设备的 DFU Mode 与 LLB 一起是写死在 Boot Rom（开机时首先启动的 ROM，包含 DFU Mode 所需驱动，LLB 以及开机时那的苹果 Logo）上的。就算是 iOS 设备无法启动，无法进入恢复模式，也可进入 DFU 模式来刷入全新固件。</p>
+<h3 id="checkm8"><strong>checkm8</strong></h3>
+<p>接下来就是大名鼎鼎的 checkm8 漏洞了。（checkm(ate)：将死）为了保证 iOS 系统的代码不被恶意篡改，苹果公司使用了一套名为 <strong>安全启动链（Secure Boot Chain）</strong> 的技术。他们将开机过程分为四到五个阶段，每个阶段负责检查下个阶段的代码，如果检查出任何问题，比如签名错误、安全模式不符，就立马中止开机。iPhone 的开机过程分为以下四个阶段：</p>
+<ol>
+<li><strong>ROM / Secure ROM</strong>：开机启动时执行的第一段程序，负责检查并加载接下来的 iBoot 。</li>
+<li><strong>iBoot</strong>：苹果开发的引导程序，负责检查并加载系统内核。</li>
+<li><strong>Kernel</strong>：iOS 系统内核。</li>
+<li><strong>OS</strong>：iOS 系统的用户界面、后台服务等非核心组件。</li>
+</ol>
+<p>Secure ROM** 作为系统启动时执行的第一段程序**，<strong>扮演着整个安全启动链技术的信任基石。</strong> 一旦攻破了它，接下来所有阶段的代码都能随意篡改，因此苹果公司下了很大功夫来保护这段 ROM 程序：</p>
+<ul>
+<li><strong>封杀写权限</strong> ：这段程序烧写在 CPU 的硅片内部，无法拆解，无法替换。在工厂里一次性烧录完之后，就连苹果自己都没办法改动它。</li>
+<li><strong>封杀读权限</strong> ：这段程序完成工作后，会直接把自己所在的储存器锁掉，再没有任何办法能读取它。也就是说，启动之后哪怕你攻陷了整个系统，也读不到这段程序的内容。苹果的想法很单纯——如果一段程序黑客读都读不到，改也改不了，那么这段程序应该就会很安全。</li>
+</ul>
+<h3 id="抓取-secure-rom"><strong>抓取 Secure ROM</strong></h3>
+<p>刚刚我们提到， Secure ROM 完成工作后，才会把储存器锁住。换句话说，只要 Secure ROM 还没完成工作，我们就有机会从内存里读到它的内容。如何抓住这个机会呢？这就轮到 checkm8 出场了。checkm8 是一个任意代码执行漏洞，允许我们在 ROM 运行期间植入 payload。更贴心的是， ani0mX 还在自己发布的 exploit 里附上了一段高质量的 payload 。允许我们通过 USB 给 payload 发送指令，执行各种高权限的操作，比如：./ipwndfu --dump-rom：将 iPhone 的 Secure ROM 直接从内存里抓取出来，保存为文件。 ./ipwndfu --demote：启用 JTAG 模式。</p>
+<p>配合一条 5800 多元的 Bonobo 线，你就可以用 gdb 随意调试 iPhone 内核了。另外， axi0mX 的 payload 里还有一个 execute 命令非常好用，但是没有放出命令行接口，只能自己写 Python 代码来调用。这个命令允许你调用内存里存在的任意函数，能传递参数，还能拿到返回值。 好了，言归正传，在 checkm8 的帮助下，窃取苹果公司层层保护的代码仅需三步：</p>
+<ol>
+<li>使用网上搜到的按键组合，把 iPhone 手机重启到 DFU<br>
+模式（固件升级模式）</li>
+<li>执行./ipwndfu -p 命令植入 payload，如果显示漏洞利用失败的话就多试几次</li>
+<li>执行./ipwndfu --dump-rom 命令读取 ROM 并保存到当前文件夹下，完工。</li>
+</ol>
+<p>成功拿到 ROM 的二进制机器码之后，接下来扔给反编译器就可以了。苹果的 CPU 从 A7 开始都是 AArch64 架构， little-endian 字序， ROM 的起始地址都是 0x100000000，设定好这三项之后，反编译器就能直出正确的汇编代码了。除了反编译得到的这些代码外，网上还有一些开源的 iBoot 项目，以及苹果某实习生泄露出来的一份四五年前的旧版 Secure ROM 代码，这些材料对我们的逆向分析都非常有帮助。但是，由于发布这些泄露代码铁定会吃一张苹果的律师函，所以我不会在这篇文章里引用或发布那份泄露代码，有需要的读者还请自己动手搜索一下。<br>
+最后要说的是，刚才那套轻松的招数最多只能用到 iPhone X 上，从 Xs / Xr 开始 checkm8 漏洞就没法用了。对于这些手机，目前我们也没有什么好办法，只能用黑盒测试、旧 ROM 代码和 iBoot 代码这三样凑活着挖漏洞。iBoot 的代码能用来挖 ROM 的漏洞，是因为 iBoot 和 ROM 有一部分功能重叠，所以代码也有重叠。比如这次的 checkm8 漏洞，就是 ani0mX 在分析一个 iBoot 补丁的时候发现的。至于解密 iBoot 的具体方法，因为好像有点偏题了，所以将来有机会的话再开篇文章讲讲吧。有兴趣的读者可以先自行了解一下 iOS 的 GID Key、IMG3/IMG4、KBAG 这几个概念。</p>
+<h3 id="漏洞原理解析"><strong>漏洞原理解析</strong></h3>
+<p>前文中提到过，利用 checkm8 前需要先把手机重启到 DFU 模式，因为这次的漏洞正是出在这个 DFU 模式上。苹果的 DFU 模式大致相当于一个“应急启动模式”，重启到这个模式后，用户可以用 USB 传入一个临时系统，用临时系统开机启动。（当然，这个临时系统必须是苹果官方系统。）基于 littlelailo 的草稿、 iPhone 8 的逆向结果，以及一些“开源”的 iBoot 项目，我整理出了 DFU 应急启动的八个步骤：</p>
+<ol>
+<li>手机以 DFU 模式开机后，负责处理 USB 的主模块会先调用 usb_dfu_init()函数，初始化 DFU 子模块。初始化过程主要做两件事：分配一块 2048 字节的内存作为缓冲区，我们叫它 io_buffer。把 DFU 事件处理函数提交给 USB 驱动 ，等待用户发来的 DFU 请求。</li>
+<li>当用户想要加载临时系统时，会先发送一个 DFU_DNLOAD 请求。主模块将它转发给 DFU 事件处理函数。</li>
+<li>DFU 检查这个请求，如果用户想要发来一段长度为 wLength 的数据，那么 DFU 将会检查 wLength 是否超过 2048 字节。超过的话，发送一个 STALL 包掐断 USB 会话，向主模块返回-1。不超过的话，用指针将 io_buffer 传递给一个全局变量，向主模块返回 wLength。</li>
+<li>主模块把 wLength 等信息记录到另一个全局变量中，为接下来接收数据做好准备。</li>
+<li>用户接下来将数据陆续发送给主模块，主模块将这些数据复制到 io_buffer 中。等到所有的数据都接收完毕后，主模块通知 DFU 模块处理这些数据。</li>
+<li>DFU 模块拿到 io_buffer，确认里面数据的长度确实是用户刚开始允诺的 wLength，然后将这些数据复制到临时系统的加载地址，比如 0x18001C000（iPhone 8/X）。</li>
+<li>缓冲区数据处理完毕之后，主模块 清空之前的所有全局变量 ，准备接受下一个 USB 请求。</li>
+<li>当用户分批发送完临时系统的所有内容后，会发送一个 DFU_DONE 请求。主模块将它转发给 DFU ，通知 DFU 开机，于是 DFU 模块 释放掉 io_buffer，尝试开机。如果开机失败，再次执行 usb_dfu_init()，开始第二轮 DFU 启动。</li>
+</ol>
+<p>有人也许已经能看出来这次漏洞的原理了。第 3 步 DFU 将 io_buffer 地址记录到了一个全局变量里，如果用户接着发送一个 DFU_DONE 请求的话，5~7 步就会被直接跳过。第 8 步 DFU 释放掉 io_buffer 这块内存，开机失败跳回到第 1 步，开始第二轮 DFU 启动。<strong>这时之前那个全局变量记录的，还是已经释放掉的 io_buffer，这就构成了一个 Use-After-Free 漏洞。</strong> 在这个 UAF 漏洞的基础上，只要找到一个合适的攻击目标，用堆风水引导 malloc 把攻击目标分配到 io_buffer 上，就能通过写 io_buffer 修改这个攻击目标的内容了。为了构建 ROP 调用链， ani0mX 盯上了一个名叫 usb_device_io_request 的数据结构。这个数据结构里面保存着发给 USB 驱动的 IO 请求，正常情况下，USB 驱动会挨个处理这些请求，完成数据收发。但是如果用户要求重置 USB 会话的话，驱动就会 一口气清空所有请求，并且 调用每个请求的回调函数。通过逆向 iPhone 8 的 Secure ROM ，我整理出了这个请求的具体数据结构：</p>
+<p>这个结构里面，我们主要看两个成员：</p>
+<ul>
+<li>next 指针，用来指向下一个要处理的请求对象，构成一串请求链表。</li>
+<li>callback 回调函数，虽然图里我把它标成一个 void *，但它实际的类型是一个函数指针，void (*callback) (struct usb_device_io_request *io_request)。</li>
+</ul>
+<p>整个攻击思路是这样的：</p>
+<ol>
+<li>构建一串假的 IO 请求，让它们的 callback 依次指向我们想执行的 gadget 。</li>
+<li>布置一套堆风水布局，操纵 malloc 把一个真请求放到我们掌控的 io_buffer 上。</li>
+<li>向 io_buffer 写数据，把那串假请求写进内存，接到真请求的后面。</li>
+<li>发送 USB reset 请求，重置会话，让 USB 驱动执行 ROP 链。</li>
+</ol>
+<p>有了这套思路之后，剩下的就是选 gadget 之类的细节了，我们暂不赘述。至此，checkm8 的攻击原理已经算是基本揭露完了。</p>
+<p>原文指路 https://paper.seebug.org/1065/</p>
+<p>我就想起了之前在 15-213 Intro to Computer System 里 x86-64 Assembly 的那一节的 Attack Lab，实则就是教你如何 Reverse Engineering 来找 buffer vulnerability。神奇的是，原理和这次的 checkm8 差不多，都是把比如 callq，ret 等堆到 buffer 里面，或者是故意 buffer overflow 来覆盖掉原来的 return address。”堆风水“这个词真的好形象哈哈哈哈哈哈哈哈</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AF-dfu-mode">什么是 DFU Mode</a>
+<ul>
+<li><a href="#checkm8"><strong>checkm8</strong></a></li>
+<li><a href="#%E6%8A%93%E5%8F%96-secure-rom"><strong>抓取 Secure ROM</strong></a></li>
+<li><a href="#%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90"><strong>漏洞原理解析</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://kaby-lake.github.io/post/liao-yi-liao-wang-ke-ping-tai-dao-di-hua-liao-duo-shao-qian/">
+              <h3 class="post-title">
+                聊一聊「网课平台」到底花了多少钱
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://kaby-lake.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

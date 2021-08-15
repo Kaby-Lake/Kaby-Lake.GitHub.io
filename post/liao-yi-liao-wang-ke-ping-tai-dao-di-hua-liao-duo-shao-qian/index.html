@@ -1,0 +1,192 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>聊一聊「网课平台」到底花了多少钱 | Gridea</title>
+<link rel="shortcut icon" href="https://kaby-lake.github.io//favicon.ico?v=1629027737869">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://kaby-lake.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="聊一聊「网课平台」到底花了多少钱 | Gridea - Atom Feed" href="https://kaby-lake.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+
+写的很好，其实上网课，搭建网课平台，服务器和安全系统硬件投入比较高的，增加了很多预算外的成本，疫情也算天灾是不可抗力因素，学习、住宿继续中，没有解约，合约不能作违约处理，故退款也不太合适。
+—— 叶海波(Anne)21世纪不动产
+
+
+那..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://kaby-lake.github.io/">
+  <img class="avatar" src="https://kaby-lake.github.io//images/avatar.png?v=1629027737869" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              聊一聊「网课平台」到底花了多少钱
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-03-12
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <figure data-type="image" tabindex="1"><img src="https://tva1.sinaimg.cn/large/008i3skNly1gthoyk071aj60v90gh0uq02.jpg" alt="" loading="lazy"></figure>
+<blockquote>
+<p>写的很好，其实上网课，搭建网课平台，服务器和安全系统硬件投入比较高的，增加了很多预算外的成本，疫情也算天灾是不可抗力因素，学习、住宿继续中，没有解约，合约不能作违约处理，故退款也不太合适。<br>
+—— 叶海波(Anne)21世纪不动产</p>
+</blockquote>
+<!-- more -->
+<p>那行，那我们就来聊一聊所谓的「搭建网课平台」「服务器」和「安全系统硬件投入」到底花了多少钱。</p>
+<p>Microsort Teams<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp0azn27j60h009aq3j02.jpg" alt="" loading="lazy"><br>
+这是微软中国的网页，有个醒目的链接「使你的学校免费注册 」<br>
+当然按照微软的一贯尿性，免费是不可能免费的。微软Office365面向国内大学的学生提供了如下图三种套餐：<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp0oggymj60h009xaas02.jpg" alt="" loading="lazy"><br>
+很显然，UNNC为学生们购买的是Office 365 A3，月费每人18元（当然这个钱是你包括在你学费里的），其中包含了Outlook、OneDrive、Office三件套以及Teams。</p>
+<p>然而，从IT Service公众号的推文得知，学校从2016年开始就一直在订阅这个Office 365计划，因此可以理解为，使用Teams没有额外花费学校一分钱。</p>
+<p>Moodle<br>
+和全世界其他任何开源项目一样，Moodle是一个自由的开源软件 （在GNU 公共许可协议下），你可以自由地复制、使用或者修改Moodle，而不用为版权付一分钱（就像最近华为拿Visual Studio Code Online改了改就当成自己的在线IDE…）。</p>
+<p>而针对许多人都在抱怨的Moodle「慢」的情况，UNNC是如何解决的呢？<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp0yv86nj60h00bu3yw02.jpg" alt="" loading="lazy"><br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp1k43swj60h009xwf802.jpg" alt="" loading="lazy">在裸连的情况下，可以从阿里DNS的解析看出来，moodle.nottingham.ac.uk依然直接指向了英国的服务器（128.243.226.103），也就是说，学校可能没有为Moodle的速度做实质性的优化。</p>
+<p>那好像根本没解决喔…</p>
+<p>在使用了FortiClient代理后…<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp1txfkmj60h007f3yv02.jpg" alt="" loading="lazy"><br>
+只是第一排的DNS服务器从阿里云变成了UNNC，但指向的依然是英国的服务器。<br>
+那我们Traceroute一下<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp2226qoj60h007s0tr02.jpg" alt="" loading="lazy"><br>
+看起来和在学校用eduroam一样，走了中国教育网香港出口，没有CDN加速。<br>
+也就是说，可能学校并没有打算改善Moodle的连接速度和稳定性…</p>
+<p>ZOOM<br>
+Zoom中国官网的教育版不提供明码标价计划服务，于是我去了美国官网…图片: <img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp29o99bj60h009x0t202.jpg" alt="" loading="lazy"><br>
+选择支持SSO URL单点登录的教育版。选择最多149名主持人，一年的报价为10000 GBP，按照8.1（他妈的现在又涨回去了）的汇率折算差不多8万人民币。从这学期开学开始算，UNNC大概使用了1/2个Semester，约折合人民币2万。</p>
+<p>ZOOM教育计划还提供了对多媒体教室的视频会议支持，估计也就是宁波诺丁汉大学官微之前大肆宣传的“宁诺未来教室”的配套软件。</p>
+<p>另外，针对新冠肺炎疫情期间激增的视频会议以及教育需求，ZOOM现对所有用户免费开放…<br>
+但是我们学校订阅的SSO URL是收费的计划</p>
+<p>Panopto<br>
+我在Panopto的官网并没有找到相应的定价和计划，但我找到了华南师范大学采购Panopto视频教学平台服务及无线AP等设备项目（0809-1841GDG13811）的中标公告图片: <img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp2rptzjj60h009xq3c02.jpg" alt="" loading="lazy"><br>
+其中宁诺并没有采购AP，因此采购Panopto的价格应该比这个稍低一些。<br>
+看起来100万是个很大的数字，但这个数字应该包括了服务器以及CDN，而且几乎所有的国外大学都采购有Echo360或者Panopto平台来存放视频内容，这其中不乏友校UNUK (MediaSpace by Kaltura)。换个角度想，Panopto就是CMU孵化出来的视频内容创业公司，因此我有理由认为这是UNNC在线教学方面欠下的债，这段时间补齐理所应当。</p>
+<p>VPN(FortiClient)<br>
+二月初的时候我跟IT Service反应：几乎所有的国外大学都有相应的VPN解决方案（包括友校UNUK）而且宁诺在很久以前是有VPN服务的（以前甚至可以在校外获取学校机房电脑上存的文件），因此这段时间补齐短板我认为应当鼓励。</p>
+<p>不过，这个VPN的问题在于白名单制：只给Moodle等网站使用教育网代理。学校有自己的解释：这个VPN本来是用来连接cslinux、csproject等内网服务器所用的，只不过顺带加速了Moodle等网站……但我总觉得这样做就是为了少交中国教育网的流量费…</p>
+<p>相似的VPN服务在阿里云大概是20000元一个月，但我不知道FortiClient要价多少</p>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://kaby-lake.github.io/post/cmu-cs-pei-yang-fang-an/">
+              <h3 class="post-title">
+                CMU CS 培养方案
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://kaby-lake.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

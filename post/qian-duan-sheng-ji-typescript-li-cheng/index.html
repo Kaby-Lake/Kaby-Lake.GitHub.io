@@ -1,0 +1,402 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>前端升级TypeScript历程 | Gridea</title>
+<link rel="shortcut icon" href="https://kaby-lake.github.io//favicon.ico?v=1629027737869">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://kaby-lake.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="前端升级TypeScript历程 | Gridea - Atom Feed" href="https://kaby-lake.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+
+
+中间件
+在改写中间件为ts的过程中，遇到了一些麻烦，也反映出了ts应用在大项目当中不够灵活的问题。以登录检测中间件为例：当用户通过了oa登录后，它会把用户相关的信息注册到ctx.req里面。js的话直接放进去就好了，但ts会提示你他不..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://kaby-lake.github.io/">
+  <img class="avatar" src="https://kaby-lake.github.io//images/avatar.png?v=1629027737869" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              前端升级TypeScript历程
+            </h2>
+            <div class="post-info">
+              <span>
+                2021-08-15
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <!--因为个人十分喜欢强类型的语言，因此看到纯JS的弱类型和稀烂的类型推断支持就很恼火，而且稍微不注意就会引入很多runtime error，而如果转向TypeScript就可以在编译期杜绝绝大多数的 `cannot read property of undefined`。因此试着把前端的项目（信安中台）提供TypeScript。这里记录了一些遇到的问题和尝试的解决方案。-->
+<!--升级现有项目的前提就是不要大动架构和逻辑，而像把最顶层的server.js、next.config等文件改成ts的话会大幅增加第一时间编译的负担，而且这不是next推荐的方案，因此我们尽可能的保留原来的配置文件，而更关注具体功能的实现。-->
+<!--只有内部的常用工具包都附带了声明文件，项目用ts才有意义，因此第一件事就是先让现有的一些常用中间件都有ts版本。我挑了一些中台常用的比如说 `@sgoc/oa-login-checker-ts"` `@sgoc/sigma-httpfetch-ts` `@sgoc/super-permission-checker-ts` `@sgoc/logger-ts`等都添加了ts支持（在对应包名字后面添加了-ts），并且export里增加了这个中间件可能会在Koa Context中新增什么内容的interface，可以用在Koa和Next的泛型中。-->
+<h4 id="中间件">中间件</h4>
+<p>在改写中间件为ts的过程中，遇到了一些麻烦，也反映出了ts应用在大项目当中不够灵活的问题。以登录检测中间件为例：当用户通过了oa登录后，它会把用户相关的信息注册到ctx.req里面。js的话直接放进去就好了，但ts会提示你他不觉得req里面有你要添加的属性，他只知道req是一个IncomingMessage类型，你只可以访问或者修改他知道的这里面存在的东西（是不是很java😅）。要解决这个问题就要引入泛型（Generics）或者模块增强（Module Augmentation）两种方案。</p>
+<p>最后我选择的是泛型，语法如下：</p>
+<pre><code class="language-typescript">type IOaLoginIncomingMessage = {
+    oaUserInfo: {
+        isLogin: boolean,
+        loginUser: ILoginUser | null,
+    }
+}
+
+function checkToLoginIfNoUser(): Middleware&lt;{}, { req: IOaLoginIncomingMessage }&gt; {
+  return async function (ctx, next) {
+  	// 这里面就可以对ctx.req.oaUserInfo进行赋值等操作
+  }
+}
+</code></pre>
+<p>如果注册此中间件在了Koa Server上面，还需要把这个泛型也传给Koa Server。</p>
+<blockquote>
+<p>为什么不使用模块增强而选择不那么方便的泛型？</p>
+</blockquote>
+<p>这是TypeScript的一个限制，模块增强仅能给现有模块里的特定接口（比如Koa中的IncomingMessage）<strong>增加属性</strong>，而不能<strong>修改属性</strong>。举个例子：按照信安中台的逻辑，首先调用<code>oa-login-checker</code>这个包，它会在ctx.req里增加oaUserInfo，它的类型可见上。</p>
+<p>接下来会调<code>super-permission-checker</code>这个中间件，它的作用是检测这个user是不是super，如果是的话在刚添加的oaUserInfo中再添加一个：</p>
+<pre><code class="language-typescript">inPasList: {
+    [key: string]: boolean;
+};
+</code></pre>
+<p>这样的属性。如果用模块增强，语法是这样的（ctx.req的类型是IncomingMessage）</p>
+<pre><code class="language-typescript">declare module &quot;koa&quot; {
+    interface IncomingMessage {
+        oaUserInfo: {
+          ...
+        }
+    }
+}
+</code></pre>
+<p>当我们选择使用模块增强时，这两个包分别都要给Koa.IncomingMessage增强一次。这个时候tsc(TypeScript Compiler)就会告诉我们说”Subsequent property declarations must have the same type“，意思是你刚刚定义的oaUserInfo只可以在第一次增加的时候就敲定了类型（里面没有inPasList），而不可以在后续再在里面增加属性。我去查了ts的handbook，发现明确指出了”you can't declare new top-level declarations in the augmentation -- just patches to existing declarations.“ 。</p>
+<p>很不幸的是，不是所有的包定义都给了泛型可以传。比如在改Logger中间件的时候，有时需要在Error这个对象上面增加一些自定义属性，这时候就只能用强制类型转换了（前提是你很确定这样转是没问题的）。</p>
+<pre><code class="language-typescript">export interface CustomizedError extends Error {
+    type?: string
+    errorType?: string
+}
+
+let err = &lt;CustomizedError&gt;new Error();
+err.type = &quot;unhandledRejection&quot;;
+</code></pre>
+<h4 id="next-koa">Next &amp; Koa</h4>
+<h5 id="版本">版本</h5>
+<p>这个项目的逻辑是，用Koa进行中间件和Api路由，用Next进行React SSR渲染。因此，就要将ctx也传给Next。很奇怪的是，IncomingMessage和ServerResponse这俩interface在项目指定版本的koa和next中定义是不一样的，这样如果直接传的话就会报错（ts觉得类型不一样）。经过一番研究，发现新版的koa和next的d.ts解决了这个问题，升级即可。</p>
+<h5 id="dev">dev</h5>
+<p>而在启动dev命令的时候，因为ts要经过一层编译以后才能生成对应的/next文件夹，因此我们用ts-node来跑index.ts去启动koa server，package.json中命令如下：</p>
+<pre><code class="language-shell">rm -rf .next/ &amp;&amp; NODE_ENV=dev nodemon -w server --exec 'ts-node' server.ts
+</code></pre>
+<h5 id="before-render">Before Render</h5>
+<p>有时候我们在把ctx交给Koa进行render之前，还想再往ctx里面放一些东西（比如对于list页面就会有req.dim这类从cookie拿出来的值）。解决方式如下：</p>
+<pre><code class="language-typescript">// types/ts
+
+interface IEffectConfigAugmentedReq {
+  // 使用Partial是因为直到promise返回以后才有内容，所以可能是空（虽然这里是await，但无伤大雅）
+    effectConfigs: Partial&lt;IEffectConfigs&gt;
+}
+
+export interface IListPageAugmentedReq {
+    dim?: string;
+}
+
+---
+
+// route.ts
+
+// 指令处理
+    // 带上：IEffectConfigAugmentedReq
+    router.get(['/n-1/instruction/process'], async (ctx) =&gt; {
+        let fetchRes = await fetch.get(&quot;fgcdBasicCenterCommonApi.getConfig&quot;, {}, ctx);
+        ctx.req.effectConfigs = fetchRes &amp;&amp; fetchRes.data;
+        await app.render(ctx.req, ctx.res, '/instruction/process', ctx.query);
+    });
+
+    // 常用工具-数据处理
+    // 带上：IListPageAugmentedReq
+    router.get(['/n-1/tools/data-handle'], async (ctx) =&gt; {
+        const queryDim = ctx.query.dim as string;
+        ctx.req.dim = dataHandleDims.includes(queryDim) ? queryDim : 'urlHandle';
+        await app.render(ctx.req, ctx.res, '/tools/data-handle', ctx.query);
+    });
+</code></pre>
+<p>这样在page的页面里带上需要的泛型，就可以正确识别在ctx上增加的值了</p>
+<h5 id="ssr">SSR</h5>
+<p>其实新版本的Next已经把getInitialProps这个根据ctx和需求来指定页面组件参数的函数拆分成了俩：</p>
+<ul>
+<li>getStaticProps (Static Generation) : Next.js will pre-render this page at build time using the props returned by <code>getStaticProps</code>.</li>
+<li>getServerSideProps (SSR) : Next.js will pre-render this page on each request using the data returned by <code>getServerSideProps</code>.</li>
+</ul>
+<p>这样就可以分离静态页面和动态页面，减少不必要的服务器计算。</p>
+<p>但考虑到信安这种中台的页面都是根据不同的账号来显示不同的内容，然后每次显示也都是去拉最新的数据，为了尽可能不改架构，我还是选用了原来的getInitialProp() 这种方式。</p>
+<p>现在 为了实现方便的自动类型推导，在/pages/下面的ts页面都可以采用如下方式来实现SSR：</p>
+<pre><code class="language-typescript">// getInitialProps会接受的参数，这里应该是Koa Context加上此页面在路由的时候添加的ctx内容
+type CustomizedContext = AugmentedKoaContext &amp; Context that are added while routing;
+
+// 单独写一个GetInitialProps方法，然后把入参规定为刚定义的组合类型
+async function GetInitialProps({req, res}: CustomizedContext) {
+    return {
+        loginUser: req.loginUser,
+        siderBarCollapsed: res.siderBarCollapsed
+      	anything...
+    };
+}
+
+/*
+    取到getInitialProps返回的类型作为此组件的Props
+    因为GetIntialProps实际上返回的是一个Promise，所以得到他的返回类型以后还要unbox
+    这个ReturnTypeUnboxPromise&lt;T&gt;定义在了lib/utils/nextType.ts中
+*/
+type Props = ReturnTypeUnboxPromise&lt;typeof GetInitialProps&gt;;
+
+/*
+   由Next渲染的页面组件需声明为NextComponentType&lt;C,IP,P&gt;类型
+   其中C为自定义的Context，这里设成Koa中间件加上路由组合起来的CustomizedContext
+   IP为Initial Props，这里不用管它
+   P为Props，也就是你自定义的这个组件应该接受的参数列表，这里设成getInitialProps的返回值的类型
+   这个时候ts就能自动为你推断出props的类型
+*/
+const YourPage: NextComponentType&lt;CustomizedContext, {}, Props&gt; = (props) =&gt; {
+  return &lt;p&gt;You can get {props.loginUser} here&lt;p/&gt;
+}
+
+export default YourPage;
+</code></pre>
+<p>虽然看起来有点麻烦，相比获得的自动推导类型这个好处来说还是值得的。</p>
+<h3 id="jquery-plugin">JQuery Plugin</h3>
+<p>因为我们的JQuery和相关的插件都是用commonJS的方式引入的，因此会出现“TS不知道$.toast是一个方法”这种问题，这时候我们就要给它单独写d.ts来增强JQueryStatic这个interface。</p>
+<p>jquery-plugin.d.ts</p>
+<pre><code class="language-typescript">/// &lt;reference types=&quot;jquery&quot;/&gt;
+interface JQueryStatic {
+    toast: (text: string) =&gt; void
+}
+</code></pre>
+<p>(例如：把 <code>/// &lt;reference tyoes=&quot;node&quot; /&gt;</code> 引入到声明文件，表明这个文件使用了 <code>@types/node/index.d.ts</code> 里面声明的名字，并且，这个包需要在编译阶段与声明文件一起被包含进来。)</p>
+<p>然后在tsconfig里面注册它</p>
+<pre><code class="language-json">    &quot;types&quot;: [
+      &quot;./lib/utils/jquery-plugin&quot;,
+      &quot;./lib/utils/dt-report-trigger&quot;,
+      &quot;./lib/utils/global&quot;
+    ]
+</code></pre>
+<p>我们多de-report-trigger和NodeJS.Process.browser也同样使用上面的方法来注册。</p>
+<h3 id="ant-design-with-typescript">Ant Design with TypeScript</h3>
+<h5 id="form-integrate-with-table">Form integrate with Table</h5>
+<p>大部分的数据页面都是上面为筛选框，下面是表格。一般的筛选框主要有两个事件：<strong>筛选内容更改(queryChange)</strong> 和 <strong>用户点击查询(seach)</strong>。Table组件通过使用forwardRef来暴露queryChange及search两个方法给主页面。这样主页面传给筛选框回调函数，事件发生以后主页面收到回调响应以后把再通过调用Table暴露的方法传递内容交给Table组件进行查询和显示。</p>
+<p>table.tsx</p>
+<pre><code class="language-typescript">// 暴露给父级的方法
+export interface DataTableExposedMethods {
+    search: (data?: IFetchParams, num?: number) =&gt; void
+    changeWithQueries: (data: IFetchParams) =&gt; void
+}
+
+// Table组件本身应该接受的参数
+export interface IDataTableProps {
+    fetchParams: IFetchParams,
+    anything...
+}
+
+/*
+    这里用ForwardRefRenderFunction&lt;T,P&gt;声明Table组件类型因为这个是主页面forwardRef要接受的类型
+    其中T为暴露给父级的方法
+    P为本组件应该接受的参数类型
+ */
+const DataTable: ForwardRefRenderFunction&lt;DataTableExposedMethods, IDataTableProps&gt; = (props, ref) =&gt; {
+    // 暴露给父级的方法，用useImperativeHandle包装
+  	// 后面用 as DataTableExposedMethods这样ts就能帮你推断比如说search的参数s、n的类型
+    useImperativeHandle(ref, () =&gt; ({
+        search: (s, n = 1) =&gt; {
+            setPageNo(n);
+            fetchData(s, n);
+        },
+        changeWithQueries: (s) =&gt; {
+            setFetchParams(s);
+        }
+    } as DataTableExposedMethods));
+
+    return &lt;Table .../&gt;;
+}
+
+export default DataTable;
+</code></pre>
+<p>page.tsx</p>
+<pre><code class="language-typescript">/*
+  forwardRef第一个是ref的类型，第二个是这个ref的props的类型
+  这里因为在DataTableR里已经定义了组件类型为ForwardRefRenderFunction&lt;DataTableMethods, IDataTableProps&gt;
+  所以forwardRef会自动推断出这俩泛型
+*/
+let DataTable = forwardRef(DataTableR);
+
+const YourPage: NextComponentType&lt;CustomizedContext, {}, Props&gt; = (props) =&gt; {
+  
+  	// 需要得到table实例的引用
+    // 传入的泛型为暴露给父组件（此组件）的方法
+    let dataTable = useRef&lt;DataTableExposedMethods&gt;(null);
+
+    // search：筛选子组件调用父组件search方法，search方法去调用表格子组件的获取数据方法，该项目统一为查询按钮事件
+    // queryChange：筛选子组件参数变化同步到数据渲染子组件
+    const search = dataTable.current!.search
+    const queryChange = dataTable.current!.changeWithQueries;
+
+    return (
+      &lt;FilterForm
+         fetchParams={fetchParams}
+         onSubmit={search}
+         onQueryChange={queryChange}
+			/&gt;
+      &lt;DataTable
+         ref={dataTable}
+			/&gt; 
+    );
+}
+
+export default YourPage;
+</code></pre>
+<p>当然，这个只是一个简单的demo，信安这个项目还用了更抽象的实现，比如提取useImperativeHandle这一段到单独的useFetchListData hooks中便于复用等。</p>
+<p>还没写完 别催 快了</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E4%B8%AD%E9%97%B4%E4%BB%B6">中间件</a></li>
+<li><a href="#next-koa">Next &amp; Koa</a>
+<ul>
+<li><a href="#%E7%89%88%E6%9C%AC">版本</a></li>
+<li><a href="#dev">dev</a></li>
+<li><a href="#before-render">Before Render</a></li>
+<li><a href="#ssr">SSR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#jquery-plugin">JQuery Plugin</a></li>
+<li><a href="#ant-design-with-typescript">Ant Design with TypeScript</a><br>
+*
+<ul>
+<li><a href="#form-integrate-with-table">Form integrate with Table</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://kaby-lake.github.io/post/qing-xie-zhao-xin-tui-wen-mu-hou/">
+              <h3 class="post-title">
+                青协招新推文幕后
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://kaby-lake.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

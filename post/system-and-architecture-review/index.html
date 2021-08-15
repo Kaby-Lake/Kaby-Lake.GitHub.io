@@ -1,0 +1,184 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>System &amp; Architecture Review | Gridea</title>
+<link rel="shortcut icon" href="https://kaby-lake.github.io//favicon.ico?v=1629027737869">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://kaby-lake.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="System &amp; Architecture Review | Gridea - Atom Feed" href="https://kaby-lake.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="2020.7更新：
+最近紧赶慢赶差不多大概重温了CS:APP的PPT，总结一下：
+前六个课件就是我们SYS部分的全部内容啦_，只不过CMU教的是X86-64-RISC，我们选择的是MIPS-CISC，原理基本上差不多，Network部分CM..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://kaby-lake.github.io/">
+  <img class="avatar" src="https://kaby-lake.github.io//images/avatar.png?v=1629027737869" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              System &amp; Architecture Review
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-07-16
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>2020.7更新：<br>
+最近紧赶慢赶差不多大概重温了CS:APP的PPT，总结一下：<br>
+前六个课件就是我们SYS部分的全部内容啦_，只不过CMU教的是X86-64-RISC，我们选择的是MIPS-CISC，原理基本上差不多，Network部分CMU用了两个PPT，但比我们讲的要详细的多，因此在期末复习的话看懂上述这八个PPT，课后的习题看一看，Lab稍微做一做，基本上就能90+🌶</p>
+<!-- more -->
+<p>说一说几个比较有趣的Lab：</p>
+<ul>
+<li>Data Lab：仅用! ˜ &amp; ˆ | + &lt;&lt; &gt;&gt;来实现如下函数：bitXor(x,y), tmin(), isTmax(x), allOddBits(x), negate(x), isAsciDigit(x), conditional, isLessOrEqual(x, y), logicalNeg(x)), howManyBits(x), floatScale2(uf), floatFloat2Int(uf), floatPower2(x)。前几个函数还是挺简单和有趣的，后面几个就比较难实现了，需要对bit level有比较深的理解。我觉得光这个Lab就能直接代替nand2tetris这门课…</li>
+<li>Bomb Lab：学会使用gdb和objdump来进行打断点，查看内存地址和内容，以及反汇编，根据反汇编出来的代码来猜这个程序要输入的是啥字符串。难度梯度增加，到第五个的时候要看懂大概1 200行的各种jump和call，有点脑壳痛。这个Lab会让你对汇编有一个更加深刻的理解</li>
+<li>Attack Lab：根据堆栈和Buffer Overflow的原理来实现字符串注入攻击，简单点来说就是注入的字符串在栈上溢出，覆盖了本不应被更改的return address，而这个返回地址会返回到注入的特定字符串来执行恶意代码。实现这个Lab以后基本就精通了堆栈以及函数调用的原理<br>
+这仅仅是前三个Lab，后面的更难，他妈的。</li>
+<li>Proxy Lab：用C提供的网路API写一个HTTP Proxy伺服器，我写不来，幹。<br>
+上述Lab是和UNNC这门课内容相关的，有兴趣可以做一下，我知道大概是没有兴趣的。<br>
+UNNC这门课是一个计算机系统的集大成者，OS、Compiler等的先行课，出发点是极好的，理应是比较有难度的几门课之一。但最终的课程安排，教学质量和不合理的学期长度使得…没能学到啥有用的东西。</li>
+</ul>
+<p>给几个链接：<br>
+http://www.cs.cmu.edu/afs/cs/academic/class/15213-f19/www/<br>
+http://csapp.cs.cmu.edu/3e/labs.html<br>
+https://www.bilibili.com/video/BV1iW411d7hd?from=search&amp;seid=1555167750088544141</p>
+<p>晚安</p>
+<p>19-20 Semester<br>
+其实我对宁诺这门课的设计不是很满意。<br>
+今年System部分是Ying Weng和Heng Yu在上，用的书是Computer Organization and Design： The Hardware/Software Interface，Network则是Amin，用的是Distributed System: Concepts and Design</p>
+<p>这门课的Syllabus如下：</p>
+<ul>
+<li>Hierarchy and Components</li>
+<li>Computer Performance</li>
+<li>MIPS Programing: Basic, Signedness, Addressing, Procedure</li>
+<li>Floating Point</li>
+<li>Basic Networking</li>
+<li>Socket Programming with TCP/IP<br>
+其实算下来真没讲多少东西，这在国内大学要分两门课：计算机系统组成及原理、计算机网络，这俩每门课都是至少20教学周的东西，你指望宁诺10周就能给你讲完…而且Ying Weng讲课还催眠…一个与或门她能给你讲半个小时…这方面Heng Yu讲课就整挺好，不过稍微有那么一点点快…</li>
+</ul>
+<p>MIPS这玩意儿现在貌似也就“龙芯”还在用这个架构，所以实际上这部分学习没有真正和实际打通，更多是学一个概念比如如何堆栈，如何把2个32位的寄存器拼起来当64位浮点型用之类的，不算难。所以我寻思着这部分如果改成学x86-64然后学会用gdb反汇编会不会更好一点…</p>
+<p>网络这部分一定要学好，尤其是TCP/IP协议栈还有报文之类的，如果有兴趣的还可以找时间自己把国内的计算机网络这门课研究透，以后不论做前端还是后端开发都会用得着…吧</p>
+<p>题外话，Computer System还有一门比较经典的神课CMU的15-213: Intro to Computer Systems 用的是Bryant的CSAPP (Computer System: A Programmer's Perspective)这本书（他本人也在CMU教这门课）感兴趣的可以去找一找视频和资料来整一整，内容基本上就是SYS这门课的延伸，会涉及：各种uint int float的bit表示、x86-64汇编以及反汇编、optimization、cache、linking、exeception control flow、i/o、虚拟内存、malloc的实现、socket、synchronization之类的。Lab十分非常贼他妈有挑战性，反正我是没做完…<br>
+其实这个评测并不是所谓意义上的Database &amp; Interface的评测，我大概重点会放在Interface这边，然后稍微讲一下Database（因为我也是考试前两天才开始学的数据库的范式…）。</p>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://kaby-lake.github.io/post/liao-yi-liao-ios-he-ipados-de-iboot/">
+              <h3 class="post-title">
+                聊一聊 iOS 和 iPadOS 的 iBoot
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://kaby-lake.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,192 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>青协招新推文幕后 | Gridea</title>
+<link rel="shortcut icon" href="https://kaby-lake.github.io//favicon.ico?v=1629027737869">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://kaby-lake.github.io//styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="青协招新推文幕后 | Gridea - Atom Feed" href="https://kaby-lake.github.io//atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="今年年初，Apple的几篇推文可谓是刷新了推文制作的上限。因此，在暑期准备青协招新材料的时候，我们就下定决心要把这次的宣传推文做出与苹果的动效设计不相上下的水准。（也就是直接抄）
+
+接下来就是具体的实现了，大家也可以对着青协这篇推文的网页源..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://kaby-lake.github.io/">
+  <img class="avatar" src="https://kaby-lake.github.io//images/avatar.png?v=1629027737869" alt="">
+  </a>
+  <h1 class="site-title">
+    Gridea
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              青协招新推文幕后
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-09-13
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <p>今年年初，Apple的几篇推文可谓是刷新了推文制作的上限。因此，在暑期准备青协招新材料的时候，我们就下定决心要把这次的宣传推文做出与苹果的动效设计不相上下的水准。（也就是直接抄）</p>
+<!-- more -->
+<p>接下来就是具体的实现了，大家也可以对着青协这篇推文的网页源码来跟着一起理解。</p>
+<p>众所周知，网页是由前端HTML，CSS和JavaScript组成的。其中HTML声明了网页的结构及元素，CSS规定了元素的位置及样式属性，而JavaScript则负责网页的交互。初看这次的推文，看起来用JavaScript来控制DOM，并更新window就可以实现整体的页面伸长效果。但从微信公众号开发手册可以得知，微信禁止推文中使用任何JS脚本，因此这条路看上去走不通。</p>
+<p>那看起来只能从网页源码入手，这里用Apple的“新一届iPad<br>
+Pro，有深度”这篇推文作为例子，来看一看科技顶流是如何在推文中实现顺滑的网页伸缩效果的。</p>
+<p>SVG 内的 CSS 动画不仅可以作用于内部路径，也可以作用于 SVG 本身。对 SVG<br>
+视窗附加<code>&lt;height&gt;</code>参数动画，就可以让这个 SVG<br>
+区块增长或缩短，也就由此使得图文增长或缩短，神奇地控制了页面尺寸。</p>
+<p>SVG 动画在微信图文中的能力，是在2016<br>
+年，在市面上的一家主流的排版公司及微信团队下制定的《微信下的 SVG<br>
+Attribute Name 白名单框定而成的。而创造性提出图文伸长模型的，是业内 SVG<br>
+知名开发者 GL 开始制作的，在这之后陆续有品牌都定制过此类互动模型。</p>
+<p>首先放上精简后的HTML结构代码</p>
+<pre><code>&lt;div&gt;
+  &lt;div class=&quot;content&quot; style=&quot;height: 0px&quot;&gt;
+    &lt;section&gt; Content 1 &lt;/section&gt;
+    &lt;section&gt; Content 2 &lt;/section&gt;
+    &lt;section&gt; Content 3 &lt;/section&gt;
+    &lt;section&gt; ...&lt;/section&gt;
+  &lt;/div&gt;
+  &lt;section class=&quot;wrapper&quot;&gt;
+    &lt;svg height=&quot;?px&quot; opacity=&quot;0&quot;&gt;
+      &lt;animate attributeName=&quot;height&quot; values=&quot;?;?;?&quot; dur=&quot;1200s&quot; begin=&quot;click + 2.75s&quot; &lt;/animate&gt;
+      &lt;animate attributeName=&quot;opacity&quot; begin=&quot;click&quot; dur=&quot;1200s&quot; values=&quot;0;1;1&quot;&gt; &lt;/animate&gt;
+    &lt;/svg&gt;
+  &lt;/section&gt;
+&lt;/div&gt;
+</code></pre>
+<p>其中<code>&lt;class&gt;</code>为<code>wrapper</code>的<code>&lt;section&gt;</code>里面的元素是一个具有<code>height</code>和<code>opacity</code>两个<code>&lt;animate&gt;</code>属性，因此可以单击后变长的<code>&lt;svg&gt;</code>。而<code>&lt;class&gt;</code>为<code>content</code>的<code>&lt;div&gt;</code>里面的元素则为实际要展示的内容。<code>content</code>的<code>&lt;height&gt;</code>被设置为了0，因此在浏览器看来<code>&lt;content&gt;</code>是“不占空间“的，决定window大小的只有<code>wrapper</code>。所以只要<code>wrapper</code>变长了，那么相应的<code>content</code>的内容就会显示出来了。</p>
+<p>而要做到点击后GIF开始播放，则先需要将<code>wrapper</code>调整为透明来展示<code>content</code>中的静态图片，而在点击图片区域后，则调整<code>wrapper</code>的透明度为1，这样<code>wrapper</code>里面的GIF就能显示出来了。因为<code>wrapper</code>里面除了GIF其他部分都是透明度，因此对下面的内容也不会遮盖。</p>
+<p>但我们把内容添加到这个精简版后，会发现一些问题：</p>
+<ul>
+<li>对于HTML5的默认实现，animate<br>
+Mode为线性动画，这看起来不够自然。要做到流畅的<code>easeInOut</code>动画，应将<code>&lt;calcMode&gt;</code>设置为<code>spline</code>后，配合<code>&lt;keySplines&gt;</code>属性，设置每个时间段内的三次贝塞尔曲线。而高度动画还应通过<code>&lt;keyTimes&gt;</code>微分法，把伸长过程分为了两段瞬间段与长效段），这能有效阻止伸长过程中被二次触发。</li>
+<li>在推文头部还需要留下推文头部放GIF的空间，因此还要根据GIF的大小来调整margin-top。</li>
+</ul>
+<p>因此完整的<code>wrapper</code>元素应为这样</p>
+<pre><code>&lt;svg height=?px&quot; opacity=&quot;0&quot; style=&quot;background-image: url(...); background-size: contain; width: 100%; height: 375px margin-top: 100px;&quot; viewBox=&quot;0 0 1080 375&quot; width=&quot;100%&quot;&gt;
+  &lt;animate attributeName=&quot;height&quot; fill=&quot;freeze&quot; restart=&quot;never&quot; calcMode=&quot;spline&quot; keySplines=&quot;0.42 0 0.58 1.0; 0.42 0 0.58 1.0&quot; keyTimes=&quot;0;0.0035;1&quot; values=&quot;375;8340;8340&quot; dur=&quot;1200s&quot; begin=&quot;click + 2.75s&quot;&gt; &lt;/animate&gt; &lt;/svg&gt;
+</code></pre>
+<p>推文中还会存在视频组件和各种二维码，这在<code>content</code>被<code>wrapper</code>覆盖后是有问题的，因为二维码在<code>wrapper</code>下面一层，微信长按触发的是<code>wrapper</code>层，因此是无法正确识别二维码的。这时候只需要耍一个小聪明，在相应的<code>div</code>上通过Z轴<code>&lt;transform&gt;</code>给二维码和视频控件提升页面优先级，使得各类被实际覆盖在SVG之下的内容均可以触摸到。</p>
+<pre><code>&lt;section style=&quot;transform: translateZ(0.01px);&quot;&gt; 视频控件或二维码 &lt;/section&gt;
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://kaby-lake.github.io/post/database-and-interface-review/">
+              <h3 class="post-title">
+                Database &amp; Interface Review
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://kaby-lake.github.io//atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

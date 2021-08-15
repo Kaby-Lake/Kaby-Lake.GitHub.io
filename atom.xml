@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://kaby-lake.github.io/</id>
+    <title>Gridea</title>
+    <updated>2021-08-15T11:42:19.355Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://kaby-lake.github.io/"/>
+    <link rel="self" href="https://kaby-lake.github.io/atom.xml"/>
+    <subtitle>温故而知新</subtitle>
+    <logo>https://kaby-lake.github.io/images/avatar.png</logo>
+    <icon>https://kaby-lake.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2021, Gridea</rights>
+    <entry>
+        <title type="html"><![CDATA[前端升级TypeScript历程]]></title>
+        <id>https://kaby-lake.github.io/post/qian-duan-sheng-ji-typescript-li-cheng/</id>
+        <link href="https://kaby-lake.github.io/post/qian-duan-sheng-ji-typescript-li-cheng/">
+        </link>
+        <updated>2021-08-15T11:37:30.000Z</updated>
+        <content type="html"><![CDATA[<!--因为个人十分喜欢强类型的语言，因此看到纯JS的弱类型和稀烂的类型推断支持就很恼火，而且稍微不注意就会引入很多runtime error，而如果转向TypeScript就可以在编译期杜绝绝大多数的 `cannot read property of undefined`。因此试着把前端的项目（信安中台）提供TypeScript。这里记录了一些遇到的问题和尝试的解决方案。-->
+<!--升级现有项目的前提就是不要大动架构和逻辑，而像把最顶层的server.js、next.config等文件改成ts的话会大幅增加第一时间编译的负担，而且这不是next推荐的方案，因此我们尽可能的保留原来的配置文件，而更关注具体功能的实现。-->
+<!--只有内部的常用工具包都附带了声明文件，项目用ts才有意义，因此第一件事就是先让现有的一些常用中间件都有ts版本。我挑了一些中台常用的比如说 `@sgoc/oa-login-checker-ts"` `@sgoc/sigma-httpfetch-ts` `@sgoc/super-permission-checker-ts` `@sgoc/logger-ts`等都添加了ts支持（在对应包名字后面添加了-ts），并且export里增加了这个中间件可能会在Koa Context中新增什么内容的interface，可以用在Koa和Next的泛型中。-->
+<h4 id="中间件">中间件</h4>
+<p>在改写中间件为ts的过程中，遇到了一些麻烦，也反映出了ts应用在大项目当中不够灵活的问题。以登录检测中间件为例：当用户通过了oa登录后，它会把用户相关的信息注册到ctx.req里面。js的话直接放进去就好了，但ts会提示你他不觉得req里面有你要添加的属性，他只知道req是一个IncomingMessage类型，你只可以访问或者修改他知道的这里面存在的东西（是不是很java😅）。要解决这个问题就要引入泛型（Generics）或者模块增强（Module Augmentation）两种方案。</p>
+<p>最后我选择的是泛型，语法如下：</p>
+<pre><code class="language-typescript">type IOaLoginIncomingMessage = {
+    oaUserInfo: {
+        isLogin: boolean,
+        loginUser: ILoginUser | null,
+    }
+}
+
+function checkToLoginIfNoUser(): Middleware&lt;{}, { req: IOaLoginIncomingMessage }&gt; {
+  return async function (ctx, next) {
+  	// 这里面就可以对ctx.req.oaUserInfo进行赋值等操作
+  }
+}
+</code></pre>
+<p>如果注册此中间件在了Koa Server上面，还需要把这个泛型也传给Koa Server。</p>
+<blockquote>
+<p>为什么不使用模块增强而选择不那么方便的泛型？</p>
+</blockquote>
+<p>这是TypeScript的一个限制，模块增强仅能给现有模块里的特定接口（比如Koa中的IncomingMessage）<strong>增加属性</strong>，而不能<strong>修改属性</strong>。举个例子：按照信安中台的逻辑，首先调用<code>oa-login-checker</code>这个包，它会在ctx.req里增加oaUserInfo，它的类型可见上。</p>
+<p>接下来会调<code>super-permission-checker</code>这个中间件，它的作用是检测这个user是不是super，如果是的话在刚添加的oaUserInfo中再添加一个：</p>
+<pre><code class="language-typescript">inPasList: {
+    [key: string]: boolean;
+};
+</code></pre>
+<p>这样的属性。如果用模块增强，语法是这样的（ctx.req的类型是IncomingMessage）</p>
+<pre><code class="language-typescript">declare module &quot;koa&quot; {
+    interface IncomingMessage {
+        oaUserInfo: {
+          ...
+        }
+    }
+}
+</code></pre>
+<p>当我们选择使用模块增强时，这两个包分别都要给Koa.IncomingMessage增强一次。这个时候tsc(TypeScript Compiler)就会告诉我们说”Subsequent property declarations must have the same type“，意思是你刚刚定义的oaUserInfo只可以在第一次增加的时候就敲定了类型（里面没有inPasList），而不可以在后续再在里面增加属性。我去查了ts的handbook，发现明确指出了”you can't declare new top-level declarations in the augmentation -- just patches to existing declarations.“ 。</p>
+<p>很不幸的是，不是所有的包定义都给了泛型可以传。比如在改Logger中间件的时候，有时需要在Error这个对象上面增加一些自定义属性，这时候就只能用强制类型转换了（前提是你很确定这样转是没问题的）。</p>
+<pre><code class="language-typescript">export interface CustomizedError extends Error {
+    type?: string
+    errorType?: string
+}
+
+let err = &lt;CustomizedError&gt;new Error();
+err.type = &quot;unhandledRejection&quot;;
+</code></pre>
+<h4 id="next-koa">Next &amp; Koa</h4>
+<h5 id="版本">版本</h5>
+<p>这个项目的逻辑是，用Koa进行中间件和Api路由，用Next进行React SSR渲染。因此，就要将ctx也传给Next。很奇怪的是，IncomingMessage和ServerResponse这俩interface在项目指定版本的koa和next中定义是不一样的，这样如果直接传的话就会报错（ts觉得类型不一样）。经过一番研究，发现新版的koa和next的d.ts解决了这个问题，升级即可。</p>
+<h5 id="dev">dev</h5>
+<p>而在启动dev命令的时候，因为ts要经过一层编译以后才能生成对应的/next文件夹，因此我们用ts-node来跑index.ts去启动koa server，package.json中命令如下：</p>
+<pre><code class="language-shell">rm -rf .next/ &amp;&amp; NODE_ENV=dev nodemon -w server --exec 'ts-node' server.ts
+</code></pre>
+<h5 id="before-render">Before Render</h5>
+<p>有时候我们在把ctx交给Koa进行render之前，还想再往ctx里面放一些东西（比如对于list页面就会有req.dim这类从cookie拿出来的值）。解决方式如下：</p>
+<pre><code class="language-typescript">// types/ts
+
+interface IEffectConfigAugmentedReq {
+  // 使用Partial是因为直到promise返回以后才有内容，所以可能是空（虽然这里是await，但无伤大雅）
+    effectConfigs: Partial&lt;IEffectConfigs&gt;
+}
+
+export interface IListPageAugmentedReq {
+    dim?: string;
+}
+
+---
+
+// route.ts
+
+// 指令处理
+    // 带上：IEffectConfigAugmentedReq
+    router.get(['/n-1/instruction/process'], async (ctx) =&gt; {
+        let fetchRes = await fetch.get(&quot;fgcdBasicCenterCommonApi.getConfig&quot;, {}, ctx);
+        ctx.req.effectConfigs = fetchRes &amp;&amp; fetchRes.data;
+        await app.render(ctx.req, ctx.res, '/instruction/process', ctx.query);
+    });
+
+    // 常用工具-数据处理
+    // 带上：IListPageAugmentedReq
+    router.get(['/n-1/tools/data-handle'], async (ctx) =&gt; {
+        const queryDim = ctx.query.dim as string;
+        ctx.req.dim = dataHandleDims.includes(queryDim) ? queryDim : 'urlHandle';
+        await app.render(ctx.req, ctx.res, '/tools/data-handle', ctx.query);
+    });
+</code></pre>
+<p>这样在page的页面里带上需要的泛型，就可以正确识别在ctx上增加的值了</p>
+<h5 id="ssr">SSR</h5>
+<p>其实新版本的Next已经把getInitialProps这个根据ctx和需求来指定页面组件参数的函数拆分成了俩：</p>
+<ul>
+<li>getStaticProps (Static Generation) : Next.js will pre-render this page at build time using the props returned by <code>getStaticProps</code>.</li>
+<li>getServerSideProps (SSR) : Next.js will pre-render this page on each request using the data returned by <code>getServerSideProps</code>.</li>
+</ul>
+<p>这样就可以分离静态页面和动态页面，减少不必要的服务器计算。</p>
+<p>但考虑到信安这种中台的页面都是根据不同的账号来显示不同的内容，然后每次显示也都是去拉最新的数据，为了尽可能不改架构，我还是选用了原来的getInitialProp() 这种方式。</p>
+<p>现在 为了实现方便的自动类型推导，在/pages/下面的ts页面都可以采用如下方式来实现SSR：</p>
+<pre><code class="language-typescript">// getInitialProps会接受的参数，这里应该是Koa Context加上此页面在路由的时候添加的ctx内容
+type CustomizedContext = AugmentedKoaContext &amp; Context that are added while routing;
+
+// 单独写一个GetInitialProps方法，然后把入参规定为刚定义的组合类型
+async function GetInitialProps({req, res}: CustomizedContext) {
+    return {
+        loginUser: req.loginUser,
+        siderBarCollapsed: res.siderBarCollapsed
+      	anything...
+    };
+}
+
+/*
+    取到getInitialProps返回的类型作为此组件的Props
+    因为GetIntialProps实际上返回的是一个Promise，所以得到他的返回类型以后还要unbox
+    这个ReturnTypeUnboxPromise&lt;T&gt;定义在了lib/utils/nextType.ts中
+*/
+type Props = ReturnTypeUnboxPromise&lt;typeof GetInitialProps&gt;;
+
+/*
+   由Next渲染的页面组件需声明为NextComponentType&lt;C,IP,P&gt;类型
+   其中C为自定义的Context，这里设成Koa中间件加上路由组合起来的CustomizedContext
+   IP为Initial Props，这里不用管它
+   P为Props，也就是你自定义的这个组件应该接受的参数列表，这里设成getInitialProps的返回值的类型
+   这个时候ts就能自动为你推断出props的类型
+*/
+const YourPage: NextComponentType&lt;CustomizedContext, {}, Props&gt; = (props) =&gt; {
+  return &lt;p&gt;You can get {props.loginUser} here&lt;p/&gt;
+}
+
+export default YourPage;
+</code></pre>
+<p>虽然看起来有点麻烦，相比获得的自动推导类型这个好处来说还是值得的。</p>
+<h3 id="jquery-plugin">JQuery Plugin</h3>
+<p>因为我们的JQuery和相关的插件都是用commonJS的方式引入的，因此会出现“TS不知道$.toast是一个方法”这种问题，这时候我们就要给它单独写d.ts来增强JQueryStatic这个interface。</p>
+<p>jquery-plugin.d.ts</p>
+<pre><code class="language-typescript">/// &lt;reference types=&quot;jquery&quot;/&gt;
+interface JQueryStatic {
+    toast: (text: string) =&gt; void
+}
+</code></pre>
+<p>(例如：把 <code>/// &lt;reference tyoes=&quot;node&quot; /&gt;</code> 引入到声明文件，表明这个文件使用了 <code>@types/node/index.d.ts</code> 里面声明的名字，并且，这个包需要在编译阶段与声明文件一起被包含进来。)</p>
+<p>然后在tsconfig里面注册它</p>
+<pre><code class="language-json">    &quot;types&quot;: [
+      &quot;./lib/utils/jquery-plugin&quot;,
+      &quot;./lib/utils/dt-report-trigger&quot;,
+      &quot;./lib/utils/global&quot;
+    ]
+</code></pre>
+<p>我们多de-report-trigger和NodeJS.Process.browser也同样使用上面的方法来注册。</p>
+<h3 id="ant-design-with-typescript">Ant Design with TypeScript</h3>
+<h5 id="form-integrate-with-table">Form integrate with Table</h5>
+<p>大部分的数据页面都是上面为筛选框，下面是表格。一般的筛选框主要有两个事件：<strong>筛选内容更改(queryChange)</strong> 和 <strong>用户点击查询(seach)</strong>。Table组件通过使用forwardRef来暴露queryChange及search两个方法给主页面。这样主页面传给筛选框回调函数，事件发生以后主页面收到回调响应以后把再通过调用Table暴露的方法传递内容交给Table组件进行查询和显示。</p>
+<p>table.tsx</p>
+<pre><code class="language-typescript">// 暴露给父级的方法
+export interface DataTableExposedMethods {
+    search: (data?: IFetchParams, num?: number) =&gt; void
+    changeWithQueries: (data: IFetchParams) =&gt; void
+}
+
+// Table组件本身应该接受的参数
+export interface IDataTableProps {
+    fetchParams: IFetchParams,
+    anything...
+}
+
+/*
+    这里用ForwardRefRenderFunction&lt;T,P&gt;声明Table组件类型因为这个是主页面forwardRef要接受的类型
+    其中T为暴露给父级的方法
+    P为本组件应该接受的参数类型
+ */
+const DataTable: ForwardRefRenderFunction&lt;DataTableExposedMethods, IDataTableProps&gt; = (props, ref) =&gt; {
+    // 暴露给父级的方法，用useImperativeHandle包装
+  	// 后面用 as DataTableExposedMethods这样ts就能帮你推断比如说search的参数s、n的类型
+    useImperativeHandle(ref, () =&gt; ({
+        search: (s, n = 1) =&gt; {
+            setPageNo(n);
+            fetchData(s, n);
+        },
+        changeWithQueries: (s) =&gt; {
+            setFetchParams(s);
+        }
+    } as DataTableExposedMethods));
+
+    return &lt;Table .../&gt;;
+}
+
+export default DataTable;
+</code></pre>
+<p>page.tsx</p>
+<pre><code class="language-typescript">/*
+  forwardRef第一个是ref的类型，第二个是这个ref的props的类型
+  这里因为在DataTableR里已经定义了组件类型为ForwardRefRenderFunction&lt;DataTableMethods, IDataTableProps&gt;
+  所以forwardRef会自动推断出这俩泛型
+*/
+let DataTable = forwardRef(DataTableR);
+
+const YourPage: NextComponentType&lt;CustomizedContext, {}, Props&gt; = (props) =&gt; {
+  
+  	// 需要得到table实例的引用
+    // 传入的泛型为暴露给父组件（此组件）的方法
+    let dataTable = useRef&lt;DataTableExposedMethods&gt;(null);
+
+    // search：筛选子组件调用父组件search方法，search方法去调用表格子组件的获取数据方法，该项目统一为查询按钮事件
+    // queryChange：筛选子组件参数变化同步到数据渲染子组件
+    const search = dataTable.current!.search
+    const queryChange = dataTable.current!.changeWithQueries;
+
+    return (
+      &lt;FilterForm
+         fetchParams={fetchParams}
+         onSubmit={search}
+         onQueryChange={queryChange}
+			/&gt;
+      &lt;DataTable
+         ref={dataTable}
+			/&gt; 
+    );
+}
+
+export default YourPage;
+</code></pre>
+<p>当然，这个只是一个简单的demo，信安这个项目还用了更抽象的实现，比如提取useImperativeHandle这一段到单独的useFetchListData hooks中便于复用等。</p>
+<p>还没写完 别催 快了</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[青协招新推文幕后]]></title>
+        <id>https://kaby-lake.github.io/post/qing-xie-zhao-xin-tui-wen-mu-hou/</id>
+        <link href="https://kaby-lake.github.io/post/qing-xie-zhao-xin-tui-wen-mu-hou/">
+        </link>
+        <updated>2020-09-13T11:35:49.000Z</updated>
+        <summary type="html"><![CDATA[<p>今年年初，Apple的几篇推文可谓是刷新了推文制作的上限。因此，在暑期准备青协招新材料的时候，我们就下定决心要把这次的宣传推文做出与苹果的动效设计不相上下的水准。（也就是直接抄）</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>今年年初，Apple的几篇推文可谓是刷新了推文制作的上限。因此，在暑期准备青协招新材料的时候，我们就下定决心要把这次的宣传推文做出与苹果的动效设计不相上下的水准。（也就是直接抄）</p>
+<!-- more -->
+<p>接下来就是具体的实现了，大家也可以对着青协这篇推文的网页源码来跟着一起理解。</p>
+<p>众所周知，网页是由前端HTML，CSS和JavaScript组成的。其中HTML声明了网页的结构及元素，CSS规定了元素的位置及样式属性，而JavaScript则负责网页的交互。初看这次的推文，看起来用JavaScript来控制DOM，并更新window就可以实现整体的页面伸长效果。但从微信公众号开发手册可以得知，微信禁止推文中使用任何JS脚本，因此这条路看上去走不通。</p>
+<p>那看起来只能从网页源码入手，这里用Apple的“新一届iPad<br>
+Pro，有深度”这篇推文作为例子，来看一看科技顶流是如何在推文中实现顺滑的网页伸缩效果的。</p>
+<p>SVG 内的 CSS 动画不仅可以作用于内部路径，也可以作用于 SVG 本身。对 SVG<br>
+视窗附加<code>&lt;height&gt;</code>参数动画，就可以让这个 SVG<br>
+区块增长或缩短，也就由此使得图文增长或缩短，神奇地控制了页面尺寸。</p>
+<p>SVG 动画在微信图文中的能力，是在2016<br>
+年，在市面上的一家主流的排版公司及微信团队下制定的《微信下的 SVG<br>
+Attribute Name 白名单框定而成的。而创造性提出图文伸长模型的，是业内 SVG<br>
+知名开发者 GL 开始制作的，在这之后陆续有品牌都定制过此类互动模型。</p>
+<p>首先放上精简后的HTML结构代码</p>
+<pre><code>&lt;div&gt;
+  &lt;div class=&quot;content&quot; style=&quot;height: 0px&quot;&gt;
+    &lt;section&gt; Content 1 &lt;/section&gt;
+    &lt;section&gt; Content 2 &lt;/section&gt;
+    &lt;section&gt; Content 3 &lt;/section&gt;
+    &lt;section&gt; ...&lt;/section&gt;
+  &lt;/div&gt;
+  &lt;section class=&quot;wrapper&quot;&gt;
+    &lt;svg height=&quot;?px&quot; opacity=&quot;0&quot;&gt;
+      &lt;animate attributeName=&quot;height&quot; values=&quot;?;?;?&quot; dur=&quot;1200s&quot; begin=&quot;click + 2.75s&quot; &lt;/animate&gt;
+      &lt;animate attributeName=&quot;opacity&quot; begin=&quot;click&quot; dur=&quot;1200s&quot; values=&quot;0;1;1&quot;&gt; &lt;/animate&gt;
+    &lt;/svg&gt;
+  &lt;/section&gt;
+&lt;/div&gt;
+</code></pre>
+<p>其中<code>&lt;class&gt;</code>为<code>wrapper</code>的<code>&lt;section&gt;</code>里面的元素是一个具有<code>height</code>和<code>opacity</code>两个<code>&lt;animate&gt;</code>属性，因此可以单击后变长的<code>&lt;svg&gt;</code>。而<code>&lt;class&gt;</code>为<code>content</code>的<code>&lt;div&gt;</code>里面的元素则为实际要展示的内容。<code>content</code>的<code>&lt;height&gt;</code>被设置为了0，因此在浏览器看来<code>&lt;content&gt;</code>是“不占空间“的，决定window大小的只有<code>wrapper</code>。所以只要<code>wrapper</code>变长了，那么相应的<code>content</code>的内容就会显示出来了。</p>
+<p>而要做到点击后GIF开始播放，则先需要将<code>wrapper</code>调整为透明来展示<code>content</code>中的静态图片，而在点击图片区域后，则调整<code>wrapper</code>的透明度为1，这样<code>wrapper</code>里面的GIF就能显示出来了。因为<code>wrapper</code>里面除了GIF其他部分都是透明度，因此对下面的内容也不会遮盖。</p>
+<p>但我们把内容添加到这个精简版后，会发现一些问题：</p>
+<ul>
+<li>对于HTML5的默认实现，animate<br>
+Mode为线性动画，这看起来不够自然。要做到流畅的<code>easeInOut</code>动画，应将<code>&lt;calcMode&gt;</code>设置为<code>spline</code>后，配合<code>&lt;keySplines&gt;</code>属性，设置每个时间段内的三次贝塞尔曲线。而高度动画还应通过<code>&lt;keyTimes&gt;</code>微分法，把伸长过程分为了两段瞬间段与长效段），这能有效阻止伸长过程中被二次触发。</li>
+<li>在推文头部还需要留下推文头部放GIF的空间，因此还要根据GIF的大小来调整margin-top。</li>
+</ul>
+<p>因此完整的<code>wrapper</code>元素应为这样</p>
+<pre><code>&lt;svg height=?px&quot; opacity=&quot;0&quot; style=&quot;background-image: url(...); background-size: contain; width: 100%; height: 375px margin-top: 100px;&quot; viewBox=&quot;0 0 1080 375&quot; width=&quot;100%&quot;&gt;
+  &lt;animate attributeName=&quot;height&quot; fill=&quot;freeze&quot; restart=&quot;never&quot; calcMode=&quot;spline&quot; keySplines=&quot;0.42 0 0.58 1.0; 0.42 0 0.58 1.0&quot; keyTimes=&quot;0;0.0035;1&quot; values=&quot;375;8340;8340&quot; dur=&quot;1200s&quot; begin=&quot;click + 2.75s&quot;&gt; &lt;/animate&gt; &lt;/svg&gt;
+</code></pre>
+<p>推文中还会存在视频组件和各种二维码，这在<code>content</code>被<code>wrapper</code>覆盖后是有问题的，因为二维码在<code>wrapper</code>下面一层，微信长按触发的是<code>wrapper</code>层，因此是无法正确识别二维码的。这时候只需要耍一个小聪明，在相应的<code>div</code>上通过Z轴<code>&lt;transform&gt;</code>给二维码和视频控件提升页面优先级，使得各类被实际覆盖在SVG之下的内容均可以触摸到。</p>
+<pre><code>&lt;section style=&quot;transform: translateZ(0.01px);&quot;&gt; 视频控件或二维码 &lt;/section&gt;
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Database & Interface Review]]></title>
+        <id>https://kaby-lake.github.io/post/database-and-interface-review/</id>
+        <link href="https://kaby-lake.github.io/post/database-and-interface-review/">
+        </link>
+        <updated>2020-07-18T11:28:40.000Z</updated>
+        <content type="html"><![CDATA[<p>7.2日，Coursework 2 出分了，挺那个的，真的挺那个的，没啥意思就，散了散了，晚安。</p>
+<p>这学期的Syllabus如下</p>
+<ul>
+<li>HTML</li>
+<li>CSS</li>
+<li>JavaScript</li>
+<li>PHP</li>
+<li>Relational Algebra</li>
+<li>Data Modeling</li>
+<li>SQL</li>
+<li>Normalization</li>
+<li>一点点的Closure和Armstrong's Axiom<br>
+相信我，看起来很多，但学的都是非常非常基础的内容…</li>
+</ul>
+<p>前后端这部分是Prapa一个人教，讲的知识点我认为是基础里面的很细致了。而且Prapa真的是很负责任，不仅提前录好了很长很清楚的网课视频，而且在正常上课和Lab的时间段都在ZOOM上等我们…虽然我没去几节。</p>
+<p>不过Prapa的改分标准可真是令人…而且基本上没有任何Argue的余地（她会认真的回复你的Argue然后坚持她的改分意见…）贴一张第一个Coursework的评分标准…</p>
+<figure data-type="image" tabindex="1"><img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp7ufon1j61a40pvn0002.jpg" alt="" loading="lazy"></figure>
+<p>更新：我把一些关于HTML CSS JS和PHP的意见和建议（主要是关于教的内容过于少）总结了一下发给了Prapa，得到的回复如下…<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp84lsjij60n02b1tjv02.jpg" alt="" loading="lazy"></p>
+<p>关于Coursework部分的回复：<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp8m8k7fj60n00idmz402.jpg" alt="" loading="lazy"></p>
+<p>7.2日，Coursework 2 出分了，挺那个的，真的挺那个的，没啥意思就，散了散了，晚安。</p>
+<p>注意上面所强调的&quot;基础&quot;二字，这也是我对宁诺几乎所有课程的不满之处。</p>
+<p>是，确实教了CSS，可是并没有教网页的Layout，比如说Flex布局<br>
+是，确实教了JavaScript，可是并没有怎么教JS相比以前学的更底层语言的特性，比如this，high-order-function，异步函数，Promises，回调地狱（？）等</p>
+<p>等等</p>
+<p>对于课后练习来说，我个人觉得Lab Sheet并没有准备什么好玩的练习题，于是在网上找到了这个</p>
+<blockquote>
+<p>University of Washington. CS154 Web Programming</p>
+</blockquote>
+<p>这门课的Problem Sets还挺好玩的，会教你用纯JS来实现各种操作DOM元素，让你感受到纯JS不用框架来实现动态网页是多么的麻烦和脑残…</p>
+<p>我比较想讲一讲一个占25分的Coursework，今年老师们紧跟时事，让我们写一个口罩销售管理系统，有一点类似于淘宝，但没有支付环节。</p>
+<p>给各位康一康我写的，我觉得害挺好看的</p>
+<p><img src="https://ae01.alicdn.com/kf/H236b78d8b53b432eb93837e5cb975347f.jpg" alt="" loading="lazy"><br>
+<img src="https://ae01.alicdn.com/kf/He830e7d33acc44f9a8caf0b66bed29b3H.jpg" alt="" loading="lazy"><br>
+<img src="https://ae01.alicdn.com/kf/Hf6aeb18aebc0488eae113622ae055736M.jpg" alt="" loading="lazy"><br>
+<img src="https://ae01.alicdn.com/kf/H299094a8d4f94f04a416ceb5f6e12f00w.jpg" alt="" loading="lazy"><br>
+<img src="https://ae01.alicdn.com/kf/H685be17b5ba44c77ac415dae5b59aa79M.jpg" alt="" loading="lazy"></p>
+<p>刚开始看到这个cw的时候我和朋友们各种祖安出题老师（正好当时知乎上清华的雷课堂挺火的…），总觉得这玩意儿写不出来，毕竟根据上课讲的那些基础的东西，能写出这种稍微能上线能用的网站简直是她妈的离谱…我算是开始项目开始的相对较早的，cw是4月底发的，要求五月底交，在我们组结束了SE的cw以后差不多五月中旬我就开始写了。之前我是对于前后端一点知识储备都没有，仅仅是过了一遍PPT就开始各种自学。</p>
+<p>如果各位真的想要认真做一个稍微还能看的过去的网站，并且学一些前后端知识的话，我还是挺推荐提前学一下现代（？）网页开发技术栈（其实都火了好几年了）比如说Bootstrap（好吧这个已经不属于''现代&quot;范畴了）或者各种基于MVVM (Model-View-ViewModel)的声明式框架比如说Vue.js，React.js这类的，我其实挺后悔当初没有狠下心来选择Vue，因为只有MVC，各种响应和变化都需要手动来操作DOM元素，到项目后期元素和控件复杂起来的时候真的会炸心态的…</p>
+<p>Github真的是个好东西，各种你不想自己造的轮子这上面都有，只要import再在report里标注一下用了开源项目就行，比如说我就找到了蚂蚁金融做的交互式图表组件，sha256算法，ISO国家和地区生成器等等，面向Github开发大法好。</p>
+<p>这学期没有讲Ajax，但想要用JS来POST或者GET得会用，想要在前后端传数据还得学会用JSON，想要PHP来方法重载还得学会用命名空间……想要做出一个能用的网站其实不难，想要做出一个好用则…</p>
+<p>Anyway，等我有时间再更新一下Database部分哈</p>
+<p>88</p>
+<p>或者鸽了<br>
+<img src="https://ae01.alicdn.com/kf/H422deae02ff14b49a5f5e53906880a5eg.jpg" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[System & Architecture Review]]></title>
+        <id>https://kaby-lake.github.io/post/system-and-architecture-review/</id>
+        <link href="https://kaby-lake.github.io/post/system-and-architecture-review/">
+        </link>
+        <updated>2020-07-16T11:26:36.000Z</updated>
+        <summary type="html"><![CDATA[<p>2020.7更新：<br>
+最近紧赶慢赶差不多大概重温了CS:APP的PPT，总结一下：<br>
+前六个课件就是我们SYS部分的全部内容啦_，只不过CMU教的是X86-64-RISC，我们选择的是MIPS-CISC，原理基本上差不多，Network部分CMU用了两个PPT，但比我们讲的要详细的多，因此在期末复习的话看懂上述这八个PPT，课后的习题看一看，Lab稍微做一做，基本上就能90+🌶</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>2020.7更新：<br>
+最近紧赶慢赶差不多大概重温了CS:APP的PPT，总结一下：<br>
+前六个课件就是我们SYS部分的全部内容啦_，只不过CMU教的是X86-64-RISC，我们选择的是MIPS-CISC，原理基本上差不多，Network部分CMU用了两个PPT，但比我们讲的要详细的多，因此在期末复习的话看懂上述这八个PPT，课后的习题看一看，Lab稍微做一做，基本上就能90+🌶</p>
+<!-- more -->
+<p>说一说几个比较有趣的Lab：</p>
+<ul>
+<li>Data Lab：仅用! ˜ &amp; ˆ | + &lt;&lt; &gt;&gt;来实现如下函数：bitXor(x,y), tmin(), isTmax(x), allOddBits(x), negate(x), isAsciDigit(x), conditional, isLessOrEqual(x, y), logicalNeg(x)), howManyBits(x), floatScale2(uf), floatFloat2Int(uf), floatPower2(x)。前几个函数还是挺简单和有趣的，后面几个就比较难实现了，需要对bit level有比较深的理解。我觉得光这个Lab就能直接代替nand2tetris这门课…</li>
+<li>Bomb Lab：学会使用gdb和objdump来进行打断点，查看内存地址和内容，以及反汇编，根据反汇编出来的代码来猜这个程序要输入的是啥字符串。难度梯度增加，到第五个的时候要看懂大概1 200行的各种jump和call，有点脑壳痛。这个Lab会让你对汇编有一个更加深刻的理解</li>
+<li>Attack Lab：根据堆栈和Buffer Overflow的原理来实现字符串注入攻击，简单点来说就是注入的字符串在栈上溢出，覆盖了本不应被更改的return address，而这个返回地址会返回到注入的特定字符串来执行恶意代码。实现这个Lab以后基本就精通了堆栈以及函数调用的原理<br>
+这仅仅是前三个Lab，后面的更难，他妈的。</li>
+<li>Proxy Lab：用C提供的网路API写一个HTTP Proxy伺服器，我写不来，幹。<br>
+上述Lab是和UNNC这门课内容相关的，有兴趣可以做一下，我知道大概是没有兴趣的。<br>
+UNNC这门课是一个计算机系统的集大成者，OS、Compiler等的先行课，出发点是极好的，理应是比较有难度的几门课之一。但最终的课程安排，教学质量和不合理的学期长度使得…没能学到啥有用的东西。</li>
+</ul>
+<p>给几个链接：<br>
+http://www.cs.cmu.edu/afs/cs/academic/class/15213-f19/www/<br>
+http://csapp.cs.cmu.edu/3e/labs.html<br>
+https://www.bilibili.com/video/BV1iW411d7hd?from=search&amp;seid=1555167750088544141</p>
+<p>晚安</p>
+<p>19-20 Semester<br>
+其实我对宁诺这门课的设计不是很满意。<br>
+今年System部分是Ying Weng和Heng Yu在上，用的书是Computer Organization and Design： The Hardware/Software Interface，Network则是Amin，用的是Distributed System: Concepts and Design</p>
+<p>这门课的Syllabus如下：</p>
+<ul>
+<li>Hierarchy and Components</li>
+<li>Computer Performance</li>
+<li>MIPS Programing: Basic, Signedness, Addressing, Procedure</li>
+<li>Floating Point</li>
+<li>Basic Networking</li>
+<li>Socket Programming with TCP/IP<br>
+其实算下来真没讲多少东西，这在国内大学要分两门课：计算机系统组成及原理、计算机网络，这俩每门课都是至少20教学周的东西，你指望宁诺10周就能给你讲完…而且Ying Weng讲课还催眠…一个与或门她能给你讲半个小时…这方面Heng Yu讲课就整挺好，不过稍微有那么一点点快…</li>
+</ul>
+<p>MIPS这玩意儿现在貌似也就“龙芯”还在用这个架构，所以实际上这部分学习没有真正和实际打通，更多是学一个概念比如如何堆栈，如何把2个32位的寄存器拼起来当64位浮点型用之类的，不算难。所以我寻思着这部分如果改成学x86-64然后学会用gdb反汇编会不会更好一点…</p>
+<p>网络这部分一定要学好，尤其是TCP/IP协议栈还有报文之类的，如果有兴趣的还可以找时间自己把国内的计算机网络这门课研究透，以后不论做前端还是后端开发都会用得着…吧</p>
+<p>题外话，Computer System还有一门比较经典的神课CMU的15-213: Intro to Computer Systems 用的是Bryant的CSAPP (Computer System: A Programmer's Perspective)这本书（他本人也在CMU教这门课）感兴趣的可以去找一找视频和资料来整一整，内容基本上就是SYS这门课的延伸，会涉及：各种uint int float的bit表示、x86-64汇编以及反汇编、optimization、cache、linking、exeception control flow、i/o、虚拟内存、malloc的实现、socket、synchronization之类的。Lab十分非常贼他妈有挑战性，反正我是没做完…<br>
+其实这个评测并不是所谓意义上的Database &amp; Interface的评测，我大概重点会放在Interface这边，然后稍微讲一下Database（因为我也是考试前两天才开始学的数据库的范式…）。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[聊一聊 iOS 和 iPadOS 的 iBoot]]></title>
+        <id>https://kaby-lake.github.io/post/liao-yi-liao-ios-he-ipados-de-iboot/</id>
+        <link href="https://kaby-lake.github.io/post/liao-yi-liao-ios-he-ipados-de-iboot/">
+        </link>
+        <updated>2020-06-03T11:02:23.000Z</updated>
+        <summary type="html"><![CDATA[<p>前几天手贱用 ipsw 升级 iOS 系统，在用 Finder 升级的过程中不知道为啥挂掉了，然后便一直处于（白苹果）DFU 模式，后来没办法，用_爱思助手_之类的软件重新刷了一遍，幸亏保住了数据，这之后便萌生出想搞清楚 iOS 的 iBoot 以及相关的技术细节的想法。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>前几天手贱用 ipsw 升级 iOS 系统，在用 Finder 升级的过程中不知道为啥挂掉了，然后便一直处于（白苹果）DFU 模式，后来没办法，用_爱思助手_之类的软件重新刷了一遍，幸亏保住了数据，这之后便萌生出想搞清楚 iOS 的 iBoot 以及相关的技术细节的想法。</p>
+<!-- more -->
+<h2 id="什么是-dfu-mode">什么是 DFU Mode</h2>
+<p>DFU 全称<strong>Device Firmware Upgrade Mode</strong>，即设备固件升级模式。在这个模式下 iOS 设备将不加载 iBoot（即控制设备启动，刷机时控制刷入流程与固件版本验证的底层程序），仅加载 LLB（<strong>Low Level Bootloader</strong>，底层启动引导）来保证数据传输正常，刷机过程完全由 Mac 控制。iOS 设备的 DFU Mode 与 LLB 一起是写死在 Boot Rom（开机时首先启动的 ROM，包含 DFU Mode 所需驱动，LLB 以及开机时那的苹果 Logo）上的。就算是 iOS 设备无法启动，无法进入恢复模式，也可进入 DFU 模式来刷入全新固件。</p>
+<h3 id="checkm8"><strong>checkm8</strong></h3>
+<p>接下来就是大名鼎鼎的 checkm8 漏洞了。（checkm(ate)：将死）为了保证 iOS 系统的代码不被恶意篡改，苹果公司使用了一套名为 <strong>安全启动链（Secure Boot Chain）</strong> 的技术。他们将开机过程分为四到五个阶段，每个阶段负责检查下个阶段的代码，如果检查出任何问题，比如签名错误、安全模式不符，就立马中止开机。iPhone 的开机过程分为以下四个阶段：</p>
+<ol>
+<li><strong>ROM / Secure ROM</strong>：开机启动时执行的第一段程序，负责检查并加载接下来的 iBoot 。</li>
+<li><strong>iBoot</strong>：苹果开发的引导程序，负责检查并加载系统内核。</li>
+<li><strong>Kernel</strong>：iOS 系统内核。</li>
+<li><strong>OS</strong>：iOS 系统的用户界面、后台服务等非核心组件。</li>
+</ol>
+<p>Secure ROM** 作为系统启动时执行的第一段程序**，<strong>扮演着整个安全启动链技术的信任基石。</strong> 一旦攻破了它，接下来所有阶段的代码都能随意篡改，因此苹果公司下了很大功夫来保护这段 ROM 程序：</p>
+<ul>
+<li><strong>封杀写权限</strong> ：这段程序烧写在 CPU 的硅片内部，无法拆解，无法替换。在工厂里一次性烧录完之后，就连苹果自己都没办法改动它。</li>
+<li><strong>封杀读权限</strong> ：这段程序完成工作后，会直接把自己所在的储存器锁掉，再没有任何办法能读取它。也就是说，启动之后哪怕你攻陷了整个系统，也读不到这段程序的内容。苹果的想法很单纯——如果一段程序黑客读都读不到，改也改不了，那么这段程序应该就会很安全。</li>
+</ul>
+<h3 id="抓取-secure-rom"><strong>抓取 Secure ROM</strong></h3>
+<p>刚刚我们提到， Secure ROM 完成工作后，才会把储存器锁住。换句话说，只要 Secure ROM 还没完成工作，我们就有机会从内存里读到它的内容。如何抓住这个机会呢？这就轮到 checkm8 出场了。checkm8 是一个任意代码执行漏洞，允许我们在 ROM 运行期间植入 payload。更贴心的是， ani0mX 还在自己发布的 exploit 里附上了一段高质量的 payload 。允许我们通过 USB 给 payload 发送指令，执行各种高权限的操作，比如：./ipwndfu --dump-rom：将 iPhone 的 Secure ROM 直接从内存里抓取出来，保存为文件。 ./ipwndfu --demote：启用 JTAG 模式。</p>
+<p>配合一条 5800 多元的 Bonobo 线，你就可以用 gdb 随意调试 iPhone 内核了。另外， axi0mX 的 payload 里还有一个 execute 命令非常好用，但是没有放出命令行接口，只能自己写 Python 代码来调用。这个命令允许你调用内存里存在的任意函数，能传递参数，还能拿到返回值。 好了，言归正传，在 checkm8 的帮助下，窃取苹果公司层层保护的代码仅需三步：</p>
+<ol>
+<li>使用网上搜到的按键组合，把 iPhone 手机重启到 DFU<br>
+模式（固件升级模式）</li>
+<li>执行./ipwndfu -p 命令植入 payload，如果显示漏洞利用失败的话就多试几次</li>
+<li>执行./ipwndfu --dump-rom 命令读取 ROM 并保存到当前文件夹下，完工。</li>
+</ol>
+<p>成功拿到 ROM 的二进制机器码之后，接下来扔给反编译器就可以了。苹果的 CPU 从 A7 开始都是 AArch64 架构， little-endian 字序， ROM 的起始地址都是 0x100000000，设定好这三项之后，反编译器就能直出正确的汇编代码了。除了反编译得到的这些代码外，网上还有一些开源的 iBoot 项目，以及苹果某实习生泄露出来的一份四五年前的旧版 Secure ROM 代码，这些材料对我们的逆向分析都非常有帮助。但是，由于发布这些泄露代码铁定会吃一张苹果的律师函，所以我不会在这篇文章里引用或发布那份泄露代码，有需要的读者还请自己动手搜索一下。<br>
+最后要说的是，刚才那套轻松的招数最多只能用到 iPhone X 上，从 Xs / Xr 开始 checkm8 漏洞就没法用了。对于这些手机，目前我们也没有什么好办法，只能用黑盒测试、旧 ROM 代码和 iBoot 代码这三样凑活着挖漏洞。iBoot 的代码能用来挖 ROM 的漏洞，是因为 iBoot 和 ROM 有一部分功能重叠，所以代码也有重叠。比如这次的 checkm8 漏洞，就是 ani0mX 在分析一个 iBoot 补丁的时候发现的。至于解密 iBoot 的具体方法，因为好像有点偏题了，所以将来有机会的话再开篇文章讲讲吧。有兴趣的读者可以先自行了解一下 iOS 的 GID Key、IMG3/IMG4、KBAG 这几个概念。</p>
+<h3 id="漏洞原理解析"><strong>漏洞原理解析</strong></h3>
+<p>前文中提到过，利用 checkm8 前需要先把手机重启到 DFU 模式，因为这次的漏洞正是出在这个 DFU 模式上。苹果的 DFU 模式大致相当于一个“应急启动模式”，重启到这个模式后，用户可以用 USB 传入一个临时系统，用临时系统开机启动。（当然，这个临时系统必须是苹果官方系统。）基于 littlelailo 的草稿、 iPhone 8 的逆向结果，以及一些“开源”的 iBoot 项目，我整理出了 DFU 应急启动的八个步骤：</p>
+<ol>
+<li>手机以 DFU 模式开机后，负责处理 USB 的主模块会先调用 usb_dfu_init()函数，初始化 DFU 子模块。初始化过程主要做两件事：分配一块 2048 字节的内存作为缓冲区，我们叫它 io_buffer。把 DFU 事件处理函数提交给 USB 驱动 ，等待用户发来的 DFU 请求。</li>
+<li>当用户想要加载临时系统时，会先发送一个 DFU_DNLOAD 请求。主模块将它转发给 DFU 事件处理函数。</li>
+<li>DFU 检查这个请求，如果用户想要发来一段长度为 wLength 的数据，那么 DFU 将会检查 wLength 是否超过 2048 字节。超过的话，发送一个 STALL 包掐断 USB 会话，向主模块返回-1。不超过的话，用指针将 io_buffer 传递给一个全局变量，向主模块返回 wLength。</li>
+<li>主模块把 wLength 等信息记录到另一个全局变量中，为接下来接收数据做好准备。</li>
+<li>用户接下来将数据陆续发送给主模块，主模块将这些数据复制到 io_buffer 中。等到所有的数据都接收完毕后，主模块通知 DFU 模块处理这些数据。</li>
+<li>DFU 模块拿到 io_buffer，确认里面数据的长度确实是用户刚开始允诺的 wLength，然后将这些数据复制到临时系统的加载地址，比如 0x18001C000（iPhone 8/X）。</li>
+<li>缓冲区数据处理完毕之后，主模块 清空之前的所有全局变量 ，准备接受下一个 USB 请求。</li>
+<li>当用户分批发送完临时系统的所有内容后，会发送一个 DFU_DONE 请求。主模块将它转发给 DFU ，通知 DFU 开机，于是 DFU 模块 释放掉 io_buffer，尝试开机。如果开机失败，再次执行 usb_dfu_init()，开始第二轮 DFU 启动。</li>
+</ol>
+<p>有人也许已经能看出来这次漏洞的原理了。第 3 步 DFU 将 io_buffer 地址记录到了一个全局变量里，如果用户接着发送一个 DFU_DONE 请求的话，5~7 步就会被直接跳过。第 8 步 DFU 释放掉 io_buffer 这块内存，开机失败跳回到第 1 步，开始第二轮 DFU 启动。<strong>这时之前那个全局变量记录的，还是已经释放掉的 io_buffer，这就构成了一个 Use-After-Free 漏洞。</strong> 在这个 UAF 漏洞的基础上，只要找到一个合适的攻击目标，用堆风水引导 malloc 把攻击目标分配到 io_buffer 上，就能通过写 io_buffer 修改这个攻击目标的内容了。为了构建 ROP 调用链， ani0mX 盯上了一个名叫 usb_device_io_request 的数据结构。这个数据结构里面保存着发给 USB 驱动的 IO 请求，正常情况下，USB 驱动会挨个处理这些请求，完成数据收发。但是如果用户要求重置 USB 会话的话，驱动就会 一口气清空所有请求，并且 调用每个请求的回调函数。通过逆向 iPhone 8 的 Secure ROM ，我整理出了这个请求的具体数据结构：</p>
+<p>这个结构里面，我们主要看两个成员：</p>
+<ul>
+<li>next 指针，用来指向下一个要处理的请求对象，构成一串请求链表。</li>
+<li>callback 回调函数，虽然图里我把它标成一个 void *，但它实际的类型是一个函数指针，void (*callback) (struct usb_device_io_request *io_request)。</li>
+</ul>
+<p>整个攻击思路是这样的：</p>
+<ol>
+<li>构建一串假的 IO 请求，让它们的 callback 依次指向我们想执行的 gadget 。</li>
+<li>布置一套堆风水布局，操纵 malloc 把一个真请求放到我们掌控的 io_buffer 上。</li>
+<li>向 io_buffer 写数据，把那串假请求写进内存，接到真请求的后面。</li>
+<li>发送 USB reset 请求，重置会话，让 USB 驱动执行 ROP 链。</li>
+</ol>
+<p>有了这套思路之后，剩下的就是选 gadget 之类的细节了，我们暂不赘述。至此，checkm8 的攻击原理已经算是基本揭露完了。</p>
+<p>原文指路 https://paper.seebug.org/1065/</p>
+<p>我就想起了之前在 15-213 Intro to Computer System 里 x86-64 Assembly 的那一节的 Attack Lab，实则就是教你如何 Reverse Engineering 来找 buffer vulnerability。神奇的是，原理和这次的 checkm8 差不多，都是把比如 callq，ret 等堆到 buffer 里面，或者是故意 buffer overflow 来覆盖掉原来的 return address。”堆风水“这个词真的好形象哈哈哈哈哈哈哈哈</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[聊一聊「网课平台」到底花了多少钱]]></title>
+        <id>https://kaby-lake.github.io/post/liao-yi-liao-wang-ke-ping-tai-dao-di-hua-liao-duo-shao-qian/</id>
+        <link href="https://kaby-lake.github.io/post/liao-yi-liao-wang-ke-ping-tai-dao-di-hua-liao-duo-shao-qian/">
+        </link>
+        <updated>2020-03-12T11:14:04.000Z</updated>
+        <summary type="html"><![CDATA[<figure data-type="image" tabindex="1"><img src="https://tva1.sinaimg.cn/large/008i3skNly1gthoyk071aj60v90gh0uq02.jpg" alt="" loading="lazy"></figure>
+<blockquote>
+<p>写的很好，其实上网课，搭建网课平台，服务器和安全系统硬件投入比较高的，增加了很多预算外的成本，疫情也算天灾是不可抗力因素，学习、住宿继续中，没有解约，合约不能作违约处理，故退款也不太合适。<br>
+—— 叶海波(Anne)21世纪不动产</p>
+</blockquote>
+]]></summary>
+        <content type="html"><![CDATA[<figure data-type="image" tabindex="1"><img src="https://tva1.sinaimg.cn/large/008i3skNly1gthoyk071aj60v90gh0uq02.jpg" alt="" loading="lazy"></figure>
+<blockquote>
+<p>写的很好，其实上网课，搭建网课平台，服务器和安全系统硬件投入比较高的，增加了很多预算外的成本，疫情也算天灾是不可抗力因素，学习、住宿继续中，没有解约，合约不能作违约处理，故退款也不太合适。<br>
+—— 叶海波(Anne)21世纪不动产</p>
+</blockquote>
+<!-- more -->
+<p>那行，那我们就来聊一聊所谓的「搭建网课平台」「服务器」和「安全系统硬件投入」到底花了多少钱。</p>
+<p>Microsort Teams<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp0azn27j60h009aq3j02.jpg" alt="" loading="lazy"><br>
+这是微软中国的网页，有个醒目的链接「使你的学校免费注册 」<br>
+当然按照微软的一贯尿性，免费是不可能免费的。微软Office365面向国内大学的学生提供了如下图三种套餐：<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp0oggymj60h009xaas02.jpg" alt="" loading="lazy"><br>
+很显然，UNNC为学生们购买的是Office 365 A3，月费每人18元（当然这个钱是你包括在你学费里的），其中包含了Outlook、OneDrive、Office三件套以及Teams。</p>
+<p>然而，从IT Service公众号的推文得知，学校从2016年开始就一直在订阅这个Office 365计划，因此可以理解为，使用Teams没有额外花费学校一分钱。</p>
+<p>Moodle<br>
+和全世界其他任何开源项目一样，Moodle是一个自由的开源软件 （在GNU 公共许可协议下），你可以自由地复制、使用或者修改Moodle，而不用为版权付一分钱（就像最近华为拿Visual Studio Code Online改了改就当成自己的在线IDE…）。</p>
+<p>而针对许多人都在抱怨的Moodle「慢」的情况，UNNC是如何解决的呢？<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp0yv86nj60h00bu3yw02.jpg" alt="" loading="lazy"><br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp1k43swj60h009xwf802.jpg" alt="" loading="lazy">在裸连的情况下，可以从阿里DNS的解析看出来，moodle.nottingham.ac.uk依然直接指向了英国的服务器（128.243.226.103），也就是说，学校可能没有为Moodle的速度做实质性的优化。</p>
+<p>那好像根本没解决喔…</p>
+<p>在使用了FortiClient代理后…<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp1txfkmj60h007f3yv02.jpg" alt="" loading="lazy"><br>
+只是第一排的DNS服务器从阿里云变成了UNNC，但指向的依然是英国的服务器。<br>
+那我们Traceroute一下<br>
+<img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp2226qoj60h007s0tr02.jpg" alt="" loading="lazy"><br>
+看起来和在学校用eduroam一样，走了中国教育网香港出口，没有CDN加速。<br>
+也就是说，可能学校并没有打算改善Moodle的连接速度和稳定性…</p>
+<p>ZOOM<br>
+Zoom中国官网的教育版不提供明码标价计划服务，于是我去了美国官网…图片: <img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp29o99bj60h009x0t202.jpg" alt="" loading="lazy"><br>
+选择支持SSO URL单点登录的教育版。选择最多149名主持人，一年的报价为10000 GBP，按照8.1（他妈的现在又涨回去了）的汇率折算差不多8万人民币。从这学期开学开始算，UNNC大概使用了1/2个Semester，约折合人民币2万。</p>
+<p>ZOOM教育计划还提供了对多媒体教室的视频会议支持，估计也就是宁波诺丁汉大学官微之前大肆宣传的“宁诺未来教室”的配套软件。</p>
+<p>另外，针对新冠肺炎疫情期间激增的视频会议以及教育需求，ZOOM现对所有用户免费开放…<br>
+但是我们学校订阅的SSO URL是收费的计划</p>
+<p>Panopto<br>
+我在Panopto的官网并没有找到相应的定价和计划，但我找到了华南师范大学采购Panopto视频教学平台服务及无线AP等设备项目（0809-1841GDG13811）的中标公告图片: <img src="https://tva1.sinaimg.cn/large/008i3skNly1gthp2rptzjj60h009xq3c02.jpg" alt="" loading="lazy"><br>
+其中宁诺并没有采购AP，因此采购Panopto的价格应该比这个稍低一些。<br>
+看起来100万是个很大的数字，但这个数字应该包括了服务器以及CDN，而且几乎所有的国外大学都采购有Echo360或者Panopto平台来存放视频内容，这其中不乏友校UNUK (MediaSpace by Kaltura)。换个角度想，Panopto就是CMU孵化出来的视频内容创业公司，因此我有理由认为这是UNNC在线教学方面欠下的债，这段时间补齐理所应当。</p>
+<p>VPN(FortiClient)<br>
+二月初的时候我跟IT Service反应：几乎所有的国外大学都有相应的VPN解决方案（包括友校UNUK）而且宁诺在很久以前是有VPN服务的（以前甚至可以在校外获取学校机房电脑上存的文件），因此这段时间补齐短板我认为应当鼓励。</p>
+<p>不过，这个VPN的问题在于白名单制：只给Moodle等网站使用教育网代理。学校有自己的解释：这个VPN本来是用来连接cslinux、csproject等内网服务器所用的，只不过顺带加速了Moodle等网站……但我总觉得这样做就是为了少交中国教育网的流量费…</p>
+<p>相似的VPN服务在阿里云大概是20000元一个月，但我不知道FortiClient要价多少</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[CMU CS 培养方案]]></title>
+        <id>https://kaby-lake.github.io/post/cmu-cs-pei-yang-fang-an/</id>
+        <link href="https://kaby-lake.github.io/post/cmu-cs-pei-yang-fang-an/">
+        </link>
+        <updated>2019-10-05T10:59:02.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="a-cmu-的课程计算机核心课程如下">A: CMU 的课程计算机核心课程如下</h1>
+<p>15-122 命令式语言编程 Principles of Imperative<br>
+Computation（2.5学分，没有编程基础的同学）</p>
+<blockquote>
+<p>大多数专业生的第一门课，讲C顺带解决一大堆基本算法实现大多数简单数据结构，然后会接触很多低层细节，因为1.这玩意是C<br>
+2. 最后作业是写一个跑bytecode的VM出来<br>
+15-150 函数式语言编程 Principles of Functional<br>
+Programming（2.5学分）<br>
+函数型编程，我校著名的丧心病狂的SML系列课之一。基本就是把函数编程范式，理论加应用全来了一遍。其中顺带解决了RegExp，Alpha-Beta<br>
+Pruning， red-black tree等等。<br>
+15-210 并行/串行数据结构 Parallel and Sequential Data Structures and<br>
+Algorithms（3学分）<br>
+15-213 计算机系统基础 Introduction to Computer Systems（3学分)<br>
+15-251 计算机理论基础 Great Theoretical Ideas in Computer<br>
+Science（3学分）<br>
+这课内容甚难，力求以一周一话题的速度迅速撸过理论计算机大多数探究话题，从DFA到图灵机到Decidability到P<br>
+vs NP再到RSA，Markov Chain，基本无所不包。<br>
+15-451 算法分析与设计 Algorithm Design and Analysis（3学分）</p>
+</blockquote>
+<h1 id="b-一门技术交流课程-one-communcations-course">B: 一门技术交流课程 One Communcations course</h1>
+<p>15-221 计算机科学家技术交流 Technical Communication for Computer<br>
+Scientists（2学分，相当于我们的英文写作课程，也关注口头表达）</p>
+<h1 id="c-从下面选择一门算法课程">C: 从下面选择一门算法课程</h1>
+<p>15-354 计算离散数学 Computational Discrete Mathematics（3学分）<br>
+15-355 现代计算机代数 Modern Computer Algebra（2学分）<br>
+15-453 形式化语言与自动机 Formal Languages, Automata, and<br>
+Computability（2学分）<br>
+21-301 组合数学 Combinatorics（2学分）<br>
+21-484 图理论 Graph Theory（2学分）</p>
+<h1 id="d-从下面选择一门应用类课程">D： 从下面选择一门应用类课程</h1>
+<p>05-391 人机交互 Designing Human Centered Software（3学分）<br>
+05-431 用户界面 Software Structures for User Interfaces（1.5学分）<br>
+10-601 机器学习 Machine Learning（3学分）<br>
+11-411 自然语言处理 Natural Language Processing（3学分）<br>
+15-313 软件工程 Foundations of Software Engineering（3学分）<br>
+15-322 计算机音乐 Introduction to Computer Music（2学分）<br>
+15-323 计算机音乐和信息处理 Computer Music Systems and Information<br>
+Processing（2学分）<br>
+15-381 人工智能 Artificial Intelligence: Representation and Problem<br>
+Solving（2学分）<br>
+15-384 机器操作 Robotic Manipulation（3学分）<br>
+15-385 计算机视觉 Computer Vision（2学分）<br>
+15-415 数据库应用 Database Applications（3学分）<br>
+15-462 计算机图像 Computer Graphics（3学分）</p>
+<h1 id="e从下面选择一门理论类课程">E：从下面选择一门理论类课程</h1>
+<p>15-312 计算机语言基础 Foundations of Programming Languages（3学分）<br>
+15-317 构造逻辑 Constructive Logic（2学分）<br>
+15-414 计算机自动化验证 Bug Catching: Automated Program Verification and<br>
+Testing（2学分）<br>
+21-300 基本逻辑 Basic Logic（2学分）<br>
+80-311 复杂性 Computability and Incompleteness（2学分）</p>
+<h1 id="f从下面选择一门软件系统类课程">F：从下面选择一门软件系统类课程</h1>
+<p>15-410 操作系统 Operating System Design and Implementation（３学分）<br>
+15-411 编译器 Compiler Design（３学分）<br>
+15-418 并行体系结构与编程 Parallel Computer Architecture and<br>
+Programming（３学分）<br>
+15-440 分布式系统 Distributed Systems（３学分）<br>
+15-441 计算机网络 Computer Networks（３学分）</p>
+]]></content>
+    </entry>
+</feed>
